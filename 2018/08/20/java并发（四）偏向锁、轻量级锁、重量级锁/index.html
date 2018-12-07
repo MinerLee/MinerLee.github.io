@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="MinerLee" />
+
+
+
+<meta name="description" content="在jdk1.6之前，Monitor的实现完全是依靠操作系统内部的互斥锁，需要进行用户态和内核态的切换（运行在用户态下的程序不能直接访问操作系统内核数据结构和程序。当我们在系统中执行一个程序时，大部分时间是运行在用户态下的，在其需要操作系统帮助完成某些它没有权力和能力完成的工作时就会切换到内核态。 处于用户态执行时，进程所能访问的内存空间和对象受到限制，其所处于占有的处理机是可被抢占的 ； 而处于核">
+<meta name="keywords" content="Java,并发,多线程,锁">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java并发（四）偏向锁、轻量级锁、重量级锁">
+<meta property="og:url" content="https://www.goldminer.top/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/index.html">
+<meta property="og:site_name" content="MinerLee的博客">
+<meta property="og:description" content="在jdk1.6之前，Monitor的实现完全是依靠操作系统内部的互斥锁，需要进行用户态和内核态的切换（运行在用户态下的程序不能直接访问操作系统内核数据结构和程序。当我们在系统中执行一个程序时，大部分时间是运行在用户态下的，在其需要操作系统帮助完成某些它没有权力和能力完成的工作时就会切换到内核态。 处于用户态执行时，进程所能访问的内存空间和对象受到限制，其所处于占有的处理机是可被抢占的 ； 而处于核">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-7e011824b83f667e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-4c52e9dc57234cf4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-bf47290e76cdea29.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-86da595950ab02e0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-08-19T16:16:02.714Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java并发（四）偏向锁、轻量级锁、重量级锁">
+<meta name="twitter:description" content="在jdk1.6之前，Monitor的实现完全是依靠操作系统内部的互斥锁，需要进行用户态和内核态的切换（运行在用户态下的程序不能直接访问操作系统内核数据结构和程序。当我们在系统中执行一个程序时，大部分时间是运行在用户态下的，在其需要操作系统帮助完成某些它没有权力和能力完成的工作时就会切换到内核态。 处于用户态执行时，进程所能访问的内存空间和对象受到限制，其所处于占有的处理机是可被抢占的 ； 而处于核">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-7e011824b83f667e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="MinerLee的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>java并发（四）偏向锁、轻量级锁、重量级锁 | MinerLee的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">MinerLee</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">文章归档</a></li>
+                        
+                            <li><a href="/tags/">标签/分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:liyaocai1997@gmail.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AQS/">AQS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GC/">GC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Gson/">Gson</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/InnoDB/">InnoDB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jedis/">Jedis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map/">Map</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sentinel/">Sentinel</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Servlet/">Servlet</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring原理/">Spring原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/String/">String</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/list/">list</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/logback/">logback</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pipeline/">pipeline</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/springCloud/">springCloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从复制/">主从复制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式/">分布式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/哨兵/">哨兵</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/常见问题/">常见问题</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发/">并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/序列化/">序列化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/慢查询/">慢查询</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/持久化/">持久化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日常开发/">日常开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日志/">日志</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集合/">集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/面向对象/">面向对象</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/高可用/">高可用</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">准备拯救世界的程序猿</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">MinerLee</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">MinerLee</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">文章归档</a></li>
+                
+                    <li><a href="/tags/">标签/分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:liyaocai1997@gmail.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" target="_blank" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" target="_blank" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-java并发（四）偏向锁、轻量级锁、重量级锁" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/" class="article-date">
+      <time datetime="2018-08-19T16:14:57.000Z" itemprop="datePublished">2018-08-20</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      java并发（四）偏向锁、轻量级锁、重量级锁
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/并发/">并发</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/多线程/">多线程</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/并发/">并发</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/锁/">锁</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>在jdk1.6之前，Monitor的实现完全是依靠操作系统内部的互斥锁，需要进行用户态和内核态的切换（运行在用户态下的程序不能直接访问操作系统内核数据结构和程序。当我们在系统中执行一个程序时，大部分时间是运行在用户态下的，在其需要操作系统帮助完成某些它没有权力和能力完成的工作时就会切换到内核态。 处于用户态执行时，进程所能访问的内存空间和对象受到限制，其所处于占有的处理机是可被抢占的 ； 而处于核心态执行中的进程，则能访问所有的内存空间和对象，且所占有的处理机是不允许被抢占的。）  在jdk1.6中，引入了新的概念：偏向锁、轻量级锁、重量级锁<br><a id="more"></a></p>
+<ul>
+<li>自旋锁</li>
+<li>偏向锁</li>
+<li>轻量级锁</li>
+<li>重量级锁<br>实际上我们知道锁的本质就是线程等待，可以分为<strong>线程阻塞和线程自旋</strong>，关于他们的区别，简单来说 ：<br><strong>阻塞</strong>：要阻塞或唤醒一个线程就需要操作系统介入，需要在户态与核心态之间切换，这种切换会消耗大量的系统资源。 如果线程状态切换是一个高频操作时，这将会消耗很多CPU处理时间， 如果对于那些需要同步的简单的代码块，获取锁挂起操作消耗的时间比用户代码执行的时间还要长，这种同步策略显然非常糟糕的。<br><strong>自旋</strong>：如果持有锁的线程能在很短时间内释放锁资源，那么那些等待竞争锁的线程就不需要做内核态和用户态之间的切换进入阻塞挂起状态，它们只需要等一等（自旋），等持有锁的线程释放锁后即可立即获取锁，这样就避免用户线程和内核的切换的消耗。（线程还是Runnable的，只是在执行空代码。当然一直自旋也会白白消耗计算资源。）<h5 id="从java锁的类型来说，阻塞对应的就是悲观锁，自旋对应的就是乐观锁。在java中乐观锁主要的实现方式就是CAS操作，我们来简单说一下CAS"><a href="#从java锁的类型来说，阻塞对应的就是悲观锁，自旋对应的就是乐观锁。在java中乐观锁主要的实现方式就是CAS操作，我们来简单说一下CAS" class="headerlink" title="从java锁的类型来说，阻塞对应的就是悲观锁，自旋对应的就是乐观锁。在java中乐观锁主要的实现方式就是CAS操作，我们来简单说一下CAS"></a>从java锁的类型来说，阻塞对应的就是悲观锁，自旋对应的就是乐观锁。在java中乐观锁主要的实现方式就是CAS操作，我们来简单说一下CAS</h5><strong>CAS</strong>：一个CAS方法包含三个参数CAS(V,E,N)。V表示要更新的变量，E表示预期的值，N表示新值。只有当V的值等于E时，才会将V的值修改为N。如果V的值不等于E，说明已经被其他线程修改了，当前线程可以放弃此操作，也可以再次尝试次操作直至修改成功。基于这样的算法，CAS操作即使没有锁，也可以发现其他线程对当前线程的干扰（临界区值的修改），并进行恰当的处理。<br>额外引申技术点：volatile<br>上面说到当前线程可以发现其他线程对临界区数据的修改，这点可以使用volatile进行保证。volatile实现了JMM中的可见性。使得对临界区资源的修改可以马上被其他线程看到</li>
+</ul>
+<p>synchronized用的锁是存在Java对象头里的。如果对象是数组类型，则虚拟机用3个字宽<br>（Word）存储对象头（也就是24个字节），如果对象是非数组类型，则用2字宽存储对象头（16个字节）。在64位虚拟机中，1字宽等于8字节，即64bit。<br><img src="https://upload-images.jianshu.io/upload_images/7432257-7e011824b83f667e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="java对象头存储结构"><br>markword数据的长度在32位和64位的虚拟机（未开启压缩指针）中分别为32bit和64bit，它的<strong>最后2bit是锁状态标志位</strong>，用来标记当前对象的状态，对象的所处的状态，决定了markword存储的内容（它会根据对象的状态复用自己的存储空间）<br>64位虚拟机在不同状态下markword结构如下图所示：JVM源码中是这么写的<br><img src="https://upload-images.jianshu.io/upload_images/7432257-4c52e9dc57234cf4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="markword存储结构"><br>最后2bit是锁状态标志位，用来标记当前对象的状态，对象的所处的状态，决定了markword存储的内容，如下表所示:<br><img src="https://upload-images.jianshu.io/upload_images/7432257-bf47290e76cdea29.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"></p>
+<p>下面来详细说一下各种锁：</p>
+<ul>
+<li>自旋锁<ul>
+<li>自旋锁原理非常简单，如果持有锁的线程能在很短时间内释放锁资源，那么那些等待竞争锁的线程就不需要做内核态和用户态之间的切换进入阻塞挂起状态，它们只需要等一等（自旋），等持有锁的线程释放锁后即可立即获取锁，这样就避免用户线程和内核的切换的消耗。<br>但是线程自旋是需要消耗cup的，说白了就是让cup在做无用功，线程不能一直占用cup自旋做无用功，所以需要设定一个自旋等待的最大时间。如果持有锁的线程执行的时间超过自旋等待的最大时间扔没有释放锁，就会导致其它争用锁的线程在最大等待时间内还是获取不到锁，这时争用线程会停止自旋进入阻塞状态。<ul>
+<li>在JDK 1.6中引入了自适应的自旋锁。 自适应意味着自旋的时间不再固定了， 而是由前一次在同一个锁上的自旋时间及锁的拥有者的状态来决定。 如果在同一个锁对象上， 自旋等待刚刚成功获得过锁， 并且持有锁的线程正在运行中， 那么虚拟机就会认为这次自旋也很有可能再次成功， 进而它将允许自旋等待持续相对更长的时间， 比如100个循环。 另外， 如果对于某个锁， 自旋很少成功获得过， 那在以后要获取这个锁时将可能省略掉自旋过程， 以避免浪费处理器资源。 </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>偏向锁（顾名思义，它会偏向于第一个访问锁的线程，如果在运行过程中，同步锁只有一个线程访问，不存在多线程争用的情况，则线程是不需要触发同步的，这种情况下，就会给线程加一个偏向锁）<br>大多数情况下，锁不仅不存在多线程竞争，而且总是由同一线程多次获得，为了让线程获得锁的代价更低而引入了偏向锁。<ul>
+<li>偏向锁的获取<ol>
+<li>访问Mark Word中偏向锁的标识是否设置成1，锁标志位是否为01——确认为可偏向状态。</li>
+<li>如果为可偏向状态，则测试线程ID是否指向当前线程，如果是，进入步骤（5），否则进入步骤（3）。</li>
+<li>如果线程ID并未指向当前线程，则通过CAS操作竞争锁。如果竞争成功，则将Mark Word中线程ID设置为当前线程ID，然后执行（5）；如果竞争失败，执行（4）。</li>
+<li>如果CAS获取偏向锁失败，则表示有竞争。当到达全局安全点（safepoint）时获得偏向锁的线程被挂起，偏向锁升级为轻量级锁，然后被阻塞在安全点的线程继续往下执行同步代码。</li>
+<li>执行同步代码。<br>以后该线程在进入和退出同步块时不需要进行CAS操作来加锁和解锁，只需简单地测试一下对象头的Mark Word里是否存储着指向当前线程的偏向锁。如果测试成功，表示线程已经获得了锁。如果测试失败，则需要再测试一下Mark Word中偏向锁的标识是否设置成1（表示当前是偏向锁）：如果没有设置，则使用CAS竞争锁；如果设置了，则尝试使用CAS将对象头的偏向锁指向当前线程。</li>
+</ol>
+</li>
+<li>偏向锁的撤销<br>当有另外的线程视图锁定某个已经被偏向过得对象，jvm就需要撤销偏向锁。线程不会主动去释放偏向锁。偏向锁的撤销，需要等待全局安全点（在这个时间点上没有字节码正在执行），它会首先暂停拥有偏向锁的线程，判断锁对象是否处于被锁定状态，撤销偏向锁后恢复到未锁定（标志位为“01”）或轻量级锁（标志位为“00”）的状态。</li>
+<li>轻量级锁<br>轻量级锁是由偏向所升级来的，偏向锁运行在一个线程进入同步块的情况下，当第二个线程加入锁争用的时候，偏向锁就会升级为轻量级锁； </li>
+</ul>
+</li>
+</ul>
+<p>在《深入理解java虚拟机中》是这样说的，如果说轻量级锁是在无竞争的情况下使用CAS操作去消除同步使用的互斥量， 那偏向锁就是在无竞争的情况下把整个同步都消除掉， 连CAS操作都不做了。</p>
+<ul>
+<li>重量级锁 （Synchronized）这里就不多做解释了<br>他们之间的关系如下：<br><img src="https://upload-images.jianshu.io/upload_images/7432257-86da595950ab02e0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"><br>上面几种锁都是JVM自己内部实现，当我们执行synchronized同步块的时候jvm会根据启用的锁和当前线程的争用情况，决定如何执行同步操作；<br>在所有的锁都启用的情况下线程进入临界区时会先去获取偏向锁，如果已经存在偏向锁了，则会尝试获取轻量级锁，如果以上两种都失败，则启用自旋锁，如果自旋也没有获取到锁，则使用重量级锁，没有获取到锁的线程阻塞挂起，直到持有锁的线程执行完同步块唤醒他们；<br>偏向锁是在无锁争用的情况下使用的，也就是同步开在当前线程没有执行完之前，没有其它线程会执行该同步快，一旦有了第二个线程的争用，偏向锁就会升级为轻量级锁，一点有两个以上线程争用，就会升级为重量级锁；如果线程争用激烈，那么应该禁用偏向锁。</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
+        <p><span>发布时间:</span>2018-08-20, 00:14:57</p>
+        <p><span>最后更新:</span>2018-08-20, 00:16:02</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/" title="java并发（四）偏向锁、轻量级锁、重量级锁">https://www.goldminer.top/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://www.goldminer.top/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/08/20/Gson复杂对象自定义序列化类/">
+                    解决Gson序列化实体类属性为null时返回null
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">
+                    Java并发（三）synchronized、volatile以及底层实现
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#从java锁的类型来说，阻塞对应的就是悲观锁，自旋对应的就是乐观锁。在java中乐观锁主要的实现方式就是CAS操作，我们来简单说一下CAS"><span class="toc-number">1.</span> <span class="toc-text">从java锁的类型来说，阻塞对应的就是悲观锁，自旋对应的就是乐观锁。在java中乐观锁主要的实现方式就是CAS操作，我们来简单说一下CAS</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-6 i,
+        .toc-level-6 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"java并发（四）偏向锁、轻量级锁、重量级锁　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section id="comments">
+    <style> aside.comment-bar { margin: auto 30px; }</style>
+    <div id="disqus_thread"></div>
+    <script>
+        var disqus_config = function(){
+            this.page.url = 'https://www.goldminer.top/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/';
+            this.page.identifier = '2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/';
+        };
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = '//.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/08/20/Gson复杂对象自定义序列化类/" title="上一篇: 解决Gson序列化实体类属性为null时返回null">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/" title="下一篇: Java并发（三）synchronized、volatile以及底层实现">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/09/28/分布式架构（一）分布式演化/">分布式架构（一）架构演化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel高可用/">Redis--Sentinel客户端高可用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-JedisCluster/">Redis--JedisCluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Cluster/">Redis--Cluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel/">Redis--Sentinel</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-主从复制/">Redis--主从复制</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-常见问题/">ReRedis--常见问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——持久化/">Redis——持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——发布订阅-消息队列/">Redis——发布订阅/消息队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis——pipeline/">Redis——pipeline</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-慢查询/">Redis 慢查询</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（五）Lock以及AbstractQueuedSynchronizer/">java并发（五）Lock以及AbstractQueuedSynchronizer实现原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ssm框架使用slf4j-logback进行日志记录/">ssm框架使用slf4j+logback进行日志记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/spring-MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson/">spring MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Gson复杂对象自定义序列化类/">解决Gson序列化实体类属性为null时返回null</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">Java并发（三）synchronized、volatile以及底层实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（一）面向对象/">（一）面向对象</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（二）值传递与引用传递/">（二）值传递与引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（三）重载与重写/">（三）重载与重写</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/初探String/">初探String</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java虚拟机内存管理/">Java虚拟机内存管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java集合框架概述/">Java集合框架概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合操作类：Collections/">集合操作类：Collections</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——List接口及其实现类源码解析（JDK8）/">集合框架——List接口及其实现类源码解析（JDK8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——Map接口及其实现类源码解析（JDK7-8）/">集合框架——Map接口及其实现类源码解析（JDK7/8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/ThreadLocal实现与内存泄漏/">ThreadLocal实现与内存泄漏</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/MySQl-InnoDB概述/">MySQl InnoDB概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">Servlet工作原理解析（一）Servlet容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">Servlet3.0——模块化与动态Servlet</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2018 MinerLee
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 8;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-124193032-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "哟！又去写bug了" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "欢迎小主人" + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

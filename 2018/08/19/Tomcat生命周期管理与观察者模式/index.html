@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="MinerLee" />
+
+
+
+<meta name="description" content="请结合Servlet工作原理阅读在这之前，我简单的讲述一下观察者模式：观察者模式又叫做发布-订阅（Publish/Subscribe）模式、源-监听（Source/Listener）模式。它定义了一种一对多的依赖关系，一个主题，多个观察者，当主题发生变化的时候，会主动的通知观察者，这样观察者便能针对主题发生的变化，执行某些对应的动作。观察者模式的应用非常广泛，如Java AWT事件模型，Servl">
+<meta name="keywords" content="源码,Tomcat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat生命周期管理与观察者模式">
+<meta property="og:url" content="https://www.goldminer.top/2018/08/19/Tomcat生命周期管理与观察者模式/index.html">
+<meta property="og:site_name" content="MinerLee的博客">
+<meta property="og:description" content="请结合Servlet工作原理阅读在这之前，我简单的讲述一下观察者模式：观察者模式又叫做发布-订阅（Publish/Subscribe）模式、源-监听（Source/Listener）模式。它定义了一种一对多的依赖关系，一个主题，多个观察者，当主题发生变化的时候，会主动的通知观察者，这样观察者便能针对主题发生的变化，执行某些对应的动作。观察者模式的应用非常广泛，如Java AWT事件模型，Servl">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-8c4e294d8ef00a4d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-dcdefcdb96c0e858.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-4621b5e63e8a4c01.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-08-19T15:48:31.249Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tomcat生命周期管理与观察者模式">
+<meta name="twitter:description" content="请结合Servlet工作原理阅读在这之前，我简单的讲述一下观察者模式：观察者模式又叫做发布-订阅（Publish/Subscribe）模式、源-监听（Source/Listener）模式。它定义了一种一对多的依赖关系，一个主题，多个观察者，当主题发生变化的时候，会主动的通知观察者，这样观察者便能针对主题发生的变化，执行某些对应的动作。观察者模式的应用非常广泛，如Java AWT事件模型，Servl">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-8c4e294d8ef00a4d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="MinerLee的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Tomcat生命周期管理与观察者模式 | MinerLee的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">MinerLee</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">文章归档</a></li>
+                        
+                            <li><a href="/tags/">标签/分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:liyaocai1997@gmail.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AQS/">AQS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GC/">GC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Gson/">Gson</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/InnoDB/">InnoDB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jedis/">Jedis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map/">Map</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sentinel/">Sentinel</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Servlet/">Servlet</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring原理/">Spring原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/String/">String</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/list/">list</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/logback/">logback</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pipeline/">pipeline</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/springCloud/">springCloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从复制/">主从复制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式/">分布式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/哨兵/">哨兵</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/常见问题/">常见问题</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发/">并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/序列化/">序列化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/慢查询/">慢查询</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/持久化/">持久化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日常开发/">日常开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日志/">日志</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集合/">集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/面向对象/">面向对象</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/高可用/">高可用</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">准备拯救世界的程序猿</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">MinerLee</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">MinerLee</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">文章归档</a></li>
+                
+                    <li><a href="/tags/">标签/分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:liyaocai1997@gmail.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" target="_blank" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" target="_blank" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-Tomcat生命周期管理与观察者模式" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/19/Tomcat生命周期管理与观察者模式/" class="article-date">
+      <time datetime="2018-08-19T15:42:07.000Z" itemprop="datePublished">2018-08-19</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Tomcat生命周期管理与观察者模式
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Tomcat/">Tomcat</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>请结合<a href="http://www.goldminer.top/2018/08/19/Servlet%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89Servlet%E5%AE%B9%E5%99%A8/">Servlet工作原理</a>阅读<br>在这之前，我简单的讲述一下观察者模式：<br>观察者模式又叫做发布-订阅（Publish/Subscribe）模式、源-监听（Source/Listener）模式。它定义了一种一对多的依赖关系，一个主题，多个观察者，当主题发生变化的时候，会主动的通知观察者，这样观察者便能针对主题发生的变化，执行某些对应的动作。观察者模式的应用非常广泛，如Java AWT事件模型，Servlet的监听器，Spring事件处理机制以及本文所讲述的Tomcat生命周期管理机制等等。<br><a id="more"></a></p>
+<ul>
+<li><p>观察者模式<br><img src="https://upload-images.jianshu.io/upload_images/7432257-8c4e294d8ef00a4d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"><br>实现该模式，通常需要两个过程：</p>
+<ul>
+<li><p>订阅者订阅<br><img src="https://upload-images.jianshu.io/upload_images/7432257-dcdefcdb96c0e858.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"></p>
+</li>
+<li><p>发布者发布<br><img src="https://upload-images.jianshu.io/upload_images/7432257-4621b5e63e8a4c01.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"><br>下面我给出一个具体示例：<br><strong>抽象主题</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.liyaocai;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 抽象主题 .</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@version</span> V1.0</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/8/17 15:31</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Observable</span> </span>&#123;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 添加观察者</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> observer</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span></span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">addObsrver</span><span class="params">(Observer observer)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 删除观察者</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> observer</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span></span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">deletebserver</span><span class="params">(Observer observer)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 事件发生，通知观察者</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">notifybservsers</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>抽象观察者</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.liyaocai;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 抽象观察者 .</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@version</span> V1.0</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/8/17 15:41</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Observer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 更新方法，观察者根据传入的主题对象获取主题的上下文</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * 根据传入的Object对象判断发生了何种事件</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">update</span><span class="params">(Observable observable, Object arg)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>具体主题</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.liyaocai;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 模拟Tomcat容器 .</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@version</span> V1.0</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/8/17 15:36</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Container</span> <span class="keyword">implements</span> <span class="title">Observable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 观察者列表</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> List&lt;Observer&gt; observers = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addObsrver</span><span class="params">(Observer observer)</span> </span>&#123;</span><br><span class="line">    observers.add(observer);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deletebserver</span><span class="params">(Observer observer)</span> </span>&#123;</span><br><span class="line">    observers.remove(observer);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">notifybservsers</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (Observer observer : observers) &#123;</span><br><span class="line">      observer.update(<span class="keyword">this</span>, <span class="string">"container start"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 容器启动方法,并且通知观察者</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span></span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span></span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span></span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"container start"</span>);</span><br><span class="line">    notifybservsers();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>具体观察者</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.liyaocai;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 具体观察者，模拟容器监听类 .</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> liyaocai</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@version</span> V1.0</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/8/17 15:44</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ContainerConfig</span> <span class="keyword">implements</span> <span class="title">Observer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">(Observable observable, Object arg)</span> </span>&#123;</span><br><span class="line">    String event = (String) arg;</span><br><span class="line">    <span class="keyword">if</span> (event.equals(<span class="string">"container start"</span>))</span><br><span class="line">    &#123;</span><br><span class="line">      System.out.println(<span class="string">"container starting"</span>);</span><br><span class="line">    <span class="comment">//   do container configs</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>实际上，监听器模式也是如此，观察者(Observer)相当于事件监听者，被观察者(Observable)相当于事件源和事件，事件源经过事件的封装传给监听器，当事件源触发事件后，监听器接收到事件对象可以回调事件的方法。</p>
+<p>#####Tomcat的生命周期管理<br>在了解了观察者模式之后，我们正式开始了解Tomcat的生命周期管理，在Tomcat的源码中，下面是相关的类：</p>
+<ul>
+<li>Lifecycle:相当于抽象主题角色，所有的容器类与组件实现类都实现了这个接口。如StandardContext</li>
+<li>LifecycleListener:相当于抽象观察者角色,具体的实现类有ContextConfig, HostConfig, EngineConfig类，它们在容器启动时与停止时触发。</li>
+<li>LifecycleEvent:生命周期事件，对主题与发生的事件进行封装。</li>
+<li>LifecycleSupport:生命周期管理的实用类，提供对观察者的添加，删除及通知观察者的方法。（Tomcat8.5中已经移除，使用CopyOnWriteArrayList来管理监听者集合）</li>
+<li>LifecycleException:生命周期异常<br>######Lifecycle接口<br>Lifecycle相当于观察者模式中的抽象主题角色(Observable)，它定义了添加、删除及通知管理者的方法。并且定义了13个与生命周期相关的事件，Start和stop方法是Lifecycle最重要的两个方法，分别代表启动与停止。所有四种容器的标准实现类（StandardEngine, StandardHost, StandardContext,StandardWrapper）和基本组件(Logger,Loader,Manager等)的实现类都实现了Lifecycle接口。<strong>容器启动时，主要做三件事：调用组件的启动方法，启动组件；调用子容器的启动方法，启动子容器；通知容器的观察者，使其执行相应的启动动作。子容器启动也做这三件事，这样整个Tomcat便启动了。</strong><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Lifecycle</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ----------------------------------------------------- Manifest Constants</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component before init" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String BEFORE_INIT_EVENT = <span class="string">"before_init"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component after init" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String AFTER_INIT_EVENT = <span class="string">"after_init"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component start" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String START_EVENT = <span class="string">"start"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component before start" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String BEFORE_START_EVENT = <span class="string">"before_start"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component after start" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String AFTER_START_EVENT = <span class="string">"after_start"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component stop" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String STOP_EVENT = <span class="string">"stop"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component before stop" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String BEFORE_STOP_EVENT = <span class="string">"before_stop"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component after stop" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String AFTER_STOP_EVENT = <span class="string">"after_stop"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component after destroy" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String AFTER_DESTROY_EVENT = <span class="string">"after_destroy"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "component before destroy" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String BEFORE_DESTROY_EVENT = <span class="string">"before_destroy"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "periodic" event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String PERIODIC_EVENT = <span class="string">"periodic"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "configure_start" event. Used by those</span></span><br><span class="line"><span class="comment">     * components that use a separate component to perform configuration and</span></span><br><span class="line"><span class="comment">     * need to signal when configuration should be performed - usually after</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> #BEFORE_START_EVENT&#125; and before &#123;<span class="doctag">@link</span> #START_EVENT&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CONFIGURE_START_EVENT = <span class="string">"configure_start"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The LifecycleEvent type for the "configure_stop" event. Used by those</span></span><br><span class="line"><span class="comment">     * components that use a separate component to perform configuration and</span></span><br><span class="line"><span class="comment">     * need to signal when de-configuration should be performed - usually after</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> #STOP_EVENT&#125; and before &#123;<span class="doctag">@link</span> #AFTER_STOP_EVENT&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CONFIGURE_STOP_EVENT = <span class="string">"configure_stop"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// --------------------------------------------------------- Public Methods</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Add a LifecycleEvent listener to this component.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> listener The listener to add</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> void addLifecycleListener(LifecycleListener listener);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get the life cycle listeners associated with this life cycle.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> An array containing the life cycle listeners associated with this</span></span><br><span class="line"><span class="comment">     *         life cycle. If this component has no listeners registered, a</span></span><br><span class="line"><span class="comment">     *         zero-length array is returned.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> LifecycleListener[] findLifecycleListeners();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Remove a LifecycleEvent listener from this component.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> listener The listener to remove</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> void removeLifecycleListener(LifecycleListener listener);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Prepare the component for starting. This method should perform any</span></span><br><span class="line"><span class="comment">     * initialization required post object creation. The following</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> LifecycleEvent&#125;s will be fired in the following order:</span></span><br><span class="line"><span class="comment">     * &lt;ol&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;INIT_EVENT: On the successful completion of component</span></span><br><span class="line"><span class="comment">     *                   initialization.&lt;/li&gt;</span></span><br><span class="line"><span class="comment">     * &lt;/ol&gt;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@exception</span> LifecycleException if this component detects a fatal error</span></span><br><span class="line"><span class="comment">     *  that prevents this component from being used</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> void init() throws LifecycleException;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Prepare for the beginning of active use of the public methods other than</span></span><br><span class="line"><span class="comment">     * property getters/setters and life cycle methods of this component. This</span></span><br><span class="line"><span class="comment">     * method should be called before any of the public methods other than</span></span><br><span class="line"><span class="comment">     * property getters/setters and life cycle methods of this component are</span></span><br><span class="line"><span class="comment">     * utilized. The following &#123;<span class="doctag">@link</span> LifecycleEvent&#125;s will be fired in the</span></span><br><span class="line"><span class="comment">     * following order:</span></span><br><span class="line"><span class="comment">     * &lt;ol&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;BEFORE_START_EVENT: At the beginning of the method. It is as this</span></span><br><span class="line"><span class="comment">     *                           point the state transitions to</span></span><br><span class="line"><span class="comment">     *                           &#123;<span class="doctag">@link</span> LifecycleState#STARTING_PREP&#125;.&lt;/li&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;START_EVENT: During the method once it is safe to call start() for</span></span><br><span class="line"><span class="comment">     *                    any child components. It is at this point that the</span></span><br><span class="line"><span class="comment">     *                    state transitions to &#123;<span class="doctag">@link</span> LifecycleState#STARTING&#125;</span></span><br><span class="line"><span class="comment">     *                    and that the public methods other than property</span></span><br><span class="line"><span class="comment">     *                    getters/setters and life cycle methods may be</span></span><br><span class="line"><span class="comment">     *                    used.&lt;/li&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;AFTER_START_EVENT: At the end of the method, immediately before it</span></span><br><span class="line"><span class="comment">     *                          returns. It is at this point that the state</span></span><br><span class="line"><span class="comment">     *                          transitions to &#123;<span class="doctag">@link</span> LifecycleState#STARTED&#125;.</span></span><br><span class="line"><span class="comment">     *                          &lt;/li&gt;</span></span><br><span class="line"><span class="comment">     * &lt;/ol&gt;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@exception</span> LifecycleException if this component detects a fatal error</span></span><br><span class="line"><span class="comment">     *  that prevents this component from being used</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> void start() throws LifecycleException;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Gracefully terminate the active use of the public methods other than</span></span><br><span class="line"><span class="comment">     * property getters/setters and life cycle methods of this component. Once</span></span><br><span class="line"><span class="comment">     * the STOP_EVENT is fired, the public methods other than property</span></span><br><span class="line"><span class="comment">     * getters/setters and life cycle methods should not be used. The following</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> LifecycleEvent&#125;s will be fired in the following order:</span></span><br><span class="line"><span class="comment">     * &lt;ol&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;BEFORE_STOP_EVENT: At the beginning of the method. It is at this</span></span><br><span class="line"><span class="comment">     *                          point that the state transitions to</span></span><br><span class="line"><span class="comment">     *                          &#123;<span class="doctag">@link</span> LifecycleState#STOPPING_PREP&#125;.&lt;/li&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;STOP_EVENT: During the method once it is safe to call stop() for</span></span><br><span class="line"><span class="comment">     *                   any child components. It is at this point that the</span></span><br><span class="line"><span class="comment">     *                   state transitions to &#123;<span class="doctag">@link</span> LifecycleState#STOPPING&#125;</span></span><br><span class="line"><span class="comment">     *                   and that the public methods other than property</span></span><br><span class="line"><span class="comment">     *                   getters/setters and life cycle methods may no longer be</span></span><br><span class="line"><span class="comment">     *                   used.&lt;/li&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;AFTER_STOP_EVENT: At the end of the method, immediately before it</span></span><br><span class="line"><span class="comment">     *                         returns. It is at this point that the state</span></span><br><span class="line"><span class="comment">     *                         transitions to &#123;<span class="doctag">@link</span> LifecycleState#STOPPED&#125;.</span></span><br><span class="line"><span class="comment">     *                         &lt;/li&gt;</span></span><br><span class="line"><span class="comment">     * &lt;/ol&gt;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * Note that if transitioning from &#123;<span class="doctag">@link</span> LifecycleState#FAILED&#125; then the</span></span><br><span class="line"><span class="comment">     * three events above will be fired but the component will transition</span></span><br><span class="line"><span class="comment">     * directly from &#123;<span class="doctag">@link</span> LifecycleState#FAILED&#125; to</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> LifecycleState#STOPPING&#125;, bypassing</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> LifecycleState#STOPPING_PREP&#125;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@exception</span> LifecycleException if this component detects a fatal error</span></span><br><span class="line"><span class="comment">     *  that needs to be reported</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> void stop() throws LifecycleException;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Prepare to discard the object. The following &#123;<span class="doctag">@link</span> LifecycleEvent&#125;s will</span></span><br><span class="line"><span class="comment">     * be fired in the following order:</span></span><br><span class="line"><span class="comment">     * &lt;ol&gt;</span></span><br><span class="line"><span class="comment">     *   &lt;li&gt;DESTROY_EVENT: On the successful completion of component</span></span><br><span class="line"><span class="comment">     *                      destruction.&lt;/li&gt;</span></span><br><span class="line"><span class="comment">     * &lt;/ol&gt;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@exception</span> LifecycleException if this component detects a fatal error</span></span><br><span class="line"><span class="comment">     *  that prevents this component from being used</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> void destroy() throws LifecycleException;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Obtain the current state of the source component.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> The current state of the source component.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> LifecycleState getState();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Obtain a textual representation of the current component state. Useful</span></span><br><span class="line"><span class="comment">     * for JMX. The format of this string may vary between point releases and</span></span><br><span class="line"><span class="comment">     * should not be relied upon to determine component state. To determine</span></span><br><span class="line"><span class="comment">     * component state, use &#123;<span class="doctag">@link</span> #getState()&#125;.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> The name of the current component state.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> String getStateName();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Marker interface used to indicate that the instance should only be used</span></span><br><span class="line"><span class="comment">     * once. Calling &#123;<span class="doctag">@link</span> #stop()&#125; on an instance that supports this interface</span></span><br><span class="line"><span class="comment">     * will automatically call &#123;<span class="doctag">@link</span> #destroy()&#125; after &#123;<span class="doctag">@link</span> #stop()&#125;</span></span><br><span class="line"><span class="comment">     * completes.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">SingleUse</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>我们来看一下具体的启动过程，<br><figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public final synchronized void start() throws LifecycleException &#123;</span><br><span class="line">    //判断容器是否已经在启动或者已经启动</span><br><span class="line">    if (LifecycleState.STARTING_PREP.equals(<span class="keyword">state</span>) || LifecycleState.STARTING.equals(<span class="keyword">state</span>) ||</span><br><span class="line">    LifecycleState.STARTED.equals(<span class="keyword">state</span>)) &#123;</span><br><span class="line"></span><br><span class="line">    if (<span class="keyword">log</span>.isDebugEnabled()) &#123;</span><br><span class="line">    Exception e = new LifecycleException();</span><br><span class="line">    <span class="keyword">log</span>.<span class="keyword">debug</span>(sm.getString(<span class="string">"lifecycleBase.alreadyStarted"</span>, <span class="keyword">to</span>String()), e);</span><br><span class="line">    &#125; else if (<span class="keyword">log</span>.isInfoEnabled()) &#123;</span><br><span class="line">    <span class="keyword">log</span>.info(sm.getString(<span class="string">"lifecycleBase.alreadyStarted"</span>, <span class="keyword">to</span>String()));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return;</span><br><span class="line">    &#125;</span><br><span class="line">    //容器未启动</span><br><span class="line">    if (<span class="keyword">state</span>.equals(LifecycleState.NEW)) &#123;</span><br><span class="line">    //  初始化容器，更改生命状态，通知容器观察者（由具体容器实现）</span><br><span class="line">    init();</span><br><span class="line">    &#125; else if (<span class="keyword">state</span>.equals(LifecycleState.FAILED)) &#123;</span><br><span class="line">    //  初始化失败，则停止</span><br><span class="line">    stop();</span><br><span class="line">    &#125; else if (!<span class="keyword">state</span>.equals(LifecycleState.INITIALIZED) &amp;&amp;</span><br><span class="line">    !<span class="keyword">state</span>.equals(LifecycleState.STOPPED)) &#123;</span><br><span class="line">    invalidTransition(Lifecycle.BEFORE_START_EVENT);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    try &#123;</span><br><span class="line">    //  设置生命状态</span><br><span class="line">    <span class="built_in">set</span>StateInternal(LifecycleState.STARTING_PREP, null, false);</span><br><span class="line">    //启动容器，调用子容器的启动方法，启动子容器，通知容器观察者（由具体容器实现）</span><br><span class="line">    startInternal();</span><br><span class="line">    if (<span class="keyword">state</span>.equals(LifecycleState.FAILED)) &#123;</span><br><span class="line">    // This is a 'controlled' failure. The component put itself into the</span><br><span class="line">    // FAILED <span class="keyword">state</span> so call stop() <span class="keyword">to</span> complete the clean-up.</span><br><span class="line">    stop();</span><br><span class="line">    &#125; else if (!<span class="keyword">state</span>.equals(LifecycleState.STARTING)) &#123;</span><br><span class="line">    // Shouldn't be necessary but acts as a check that sub-classes are</span><br><span class="line">    // doing what they are supposed <span class="keyword">to</span>.</span><br><span class="line">    invalidTransition(Lifecycle.AFTER_START_EVENT);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">    <span class="built_in">set</span>StateInternal(LifecycleState.STARTED, null, false);</span><br><span class="line">    &#125;</span><br><span class="line">    &#125; catch (Throwable t) &#123;</span><br><span class="line">    // This is an 'uncontrolled' failure so put the component into the</span><br><span class="line">    // FAILED <span class="keyword">state</span> and throw an exception.</span><br><span class="line">    ExceptionUtils.handleThrowable(t);</span><br><span class="line">    <span class="built_in">set</span>StateInternal(LifecycleState.FAILED, null, false);</span><br><span class="line">    throw new LifecycleException(sm.getString(<span class="string">"lifecycleBase.startFail"</span>, <span class="keyword">to</span>String()), t);</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>######LifecycleListener接口<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">LifecycleListener</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Acknowledge the occurrence of the specified event.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * @param event LifecycleEvent that has occurred</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lifecycleEvent</span>(<span class="params">LifecycleEvent <span class="keyword">event</span></span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>LifecycleListener接口提供了一个更新方法，监听器通过事件类型来做出响应操作，与上面的示例代码的观察者模式相比（一种变形），Event封装了事件源（也就是具体主题与事件的类型）。</p>
+<p>######LifecycleEvent<br>我们来看一下是如何封装的，<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">public <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">LifecycleEvent</span> <span class="keyword">extends</span> <span class="title">EventObject</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> static <span class="keyword">final</span> long serialVersionUID = <span class="number">1</span>L;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Construct a new LifecycleEvent with the specified parameters.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * @param lifecycle Component on which this event occurred</span></span><br><span class="line"><span class="comment">     * @param type Event type (required)</span></span><br><span class="line"><span class="comment">     * @param data Event data (if any)</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    public <span class="type">LifecycleEvent</span>(<span class="type">Lifecycle</span> lifecycle, <span class="type">String</span> <span class="class"><span class="keyword">type</span>, <span class="title">Object</span> <span class="title">data</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(lifecycle);</span><br><span class="line">        <span class="keyword">this</span>.<span class="keyword">type</span> = <span class="class"><span class="keyword">type</span></span>;</span><br><span class="line">        <span class="keyword">this</span>.data = data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The event data associated with this event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Object</span> data;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * The event type this instance represents.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">String</span> <span class="class"><span class="keyword">type</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * @return the event data of this event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    public <span class="type">Object</span> getData() &#123;</span><br><span class="line">        <span class="keyword">return</span> data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * @return the Lifecycle on which this event occurred.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    public <span class="type">Lifecycle</span> getLifecycle() &#123;</span><br><span class="line">        <span class="keyword">return</span> (<span class="type">Lifecycle</span>) getSource();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * @return the event type of this event.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    public <span class="type">String</span> getType() &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.<span class="keyword">type</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看出，事件封装了事件源（具体的主题）、事件的类型以及需要事件的数据。<br><strong>最后总结一下：tomcat的启动过程：调用组件的启动方法，启动组件；调用子容器的启动方法，启动子容器；通知容器的观察者，使其执行相应的启动动作。每一层次的容器都这样启动，最终整个Tomcat启动完毕。</strong></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
+        <p><span>发布时间:</span>2018-08-19, 23:42:07</p>
+        <p><span>最后更新:</span>2018-08-19, 23:48:31</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/19/Tomcat生命周期管理与观察者模式/" title="Tomcat生命周期管理与观察者模式">https://www.goldminer.top/2018/08/19/Tomcat生命周期管理与观察者模式/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://www.goldminer.top/2018/08/19/Tomcat生命周期管理与观察者模式/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">
+                    Servlet工作原理解析（一）Servlet容器
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">
+                    Servlet3.0——模块化与动态Servlet
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-6 i,
+        .toc-level-6 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Tomcat生命周期管理与观察者模式　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section id="comments">
+    <style> aside.comment-bar { margin: auto 30px; }</style>
+    <div id="disqus_thread"></div>
+    <script>
+        var disqus_config = function(){
+            this.page.url = 'https://www.goldminer.top/2018/08/19/Tomcat生命周期管理与观察者模式/';
+            this.page.identifier = '2018/08/19/Tomcat生命周期管理与观察者模式/';
+        };
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = '//.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/" title="上一篇: Servlet工作原理解析（一）Servlet容器">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/19/Servlet3-0——模块化与动态Servlet/" title="下一篇: Servlet3.0——模块化与动态Servlet">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/09/28/分布式架构（一）分布式演化/">分布式架构（一）架构演化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel高可用/">Redis--Sentinel客户端高可用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-JedisCluster/">Redis--JedisCluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Cluster/">Redis--Cluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel/">Redis--Sentinel</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-主从复制/">Redis--主从复制</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-常见问题/">ReRedis--常见问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——持久化/">Redis——持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——发布订阅-消息队列/">Redis——发布订阅/消息队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis——pipeline/">Redis——pipeline</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-慢查询/">Redis 慢查询</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（五）Lock以及AbstractQueuedSynchronizer/">java并发（五）Lock以及AbstractQueuedSynchronizer实现原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ssm框架使用slf4j-logback进行日志记录/">ssm框架使用slf4j+logback进行日志记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/spring-MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson/">spring MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Gson复杂对象自定义序列化类/">解决Gson序列化实体类属性为null时返回null</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">Java并发（三）synchronized、volatile以及底层实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（一）面向对象/">（一）面向对象</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（二）值传递与引用传递/">（二）值传递与引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（三）重载与重写/">（三）重载与重写</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/初探String/">初探String</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java虚拟机内存管理/">Java虚拟机内存管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java集合框架概述/">Java集合框架概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合操作类：Collections/">集合操作类：Collections</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——List接口及其实现类源码解析（JDK8）/">集合框架——List接口及其实现类源码解析（JDK8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——Map接口及其实现类源码解析（JDK7-8）/">集合框架——Map接口及其实现类源码解析（JDK7/8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/ThreadLocal实现与内存泄漏/">ThreadLocal实现与内存泄漏</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/MySQl-InnoDB概述/">MySQl InnoDB概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">Servlet工作原理解析（一）Servlet容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">Servlet3.0——模块化与动态Servlet</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2018 MinerLee
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 8;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-124193032-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "哟！又去写bug了" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "欢迎小主人" + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

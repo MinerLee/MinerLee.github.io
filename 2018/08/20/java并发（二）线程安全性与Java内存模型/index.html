@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="MinerLee" />
+
+
+
+<meta name="description" content="谈到并发，首先要提到的就是安全，所有的并发编程的前提都是安全。在java中，  什么是线程安全性？ 在多线程并发访问一个对象或者类时，他始终都能表现出正确的行为，也就是说，我们在调用时不需要做额外的同步。   线程安全的几个特点">
+<meta name="keywords" content="Java,JVM,GC,多线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java并发（二）线程安全性与Java内存模型">
+<meta property="og:url" content="https://www.goldminer.top/2018/08/20/java并发（二）线程安全性与Java内存模型/index.html">
+<meta property="og:site_name" content="MinerLee的博客">
+<meta property="og:description" content="谈到并发，首先要提到的就是安全，所有的并发编程的前提都是安全。在java中，  什么是线程安全性？ 在多线程并发访问一个对象或者类时，他始终都能表现出正确的行为，也就是说，我们在调用时不需要做额外的同步。   线程安全的几个特点">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-6d3da2a6a9d7a136.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-280b1bfe9e7b8a68.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-f2b11b6a306e17f5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-ecf491ce02776711.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-08-19T16:14:09.096Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java并发（二）线程安全性与Java内存模型">
+<meta name="twitter:description" content="谈到并发，首先要提到的就是安全，所有的并发编程的前提都是安全。在java中，  什么是线程安全性？ 在多线程并发访问一个对象或者类时，他始终都能表现出正确的行为，也就是说，我们在调用时不需要做额外的同步。   线程安全的几个特点">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-6d3da2a6a9d7a136.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="MinerLee的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>java并发（二）线程安全性与Java内存模型 | MinerLee的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">MinerLee</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">文章归档</a></li>
+                        
+                            <li><a href="/tags/">标签/分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:liyaocai1997@gmail.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AQS/">AQS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GC/">GC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Gson/">Gson</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/InnoDB/">InnoDB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jedis/">Jedis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map/">Map</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sentinel/">Sentinel</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Servlet/">Servlet</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring原理/">Spring原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/String/">String</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/list/">list</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/logback/">logback</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pipeline/">pipeline</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/springCloud/">springCloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从复制/">主从复制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式/">分布式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/哨兵/">哨兵</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/常见问题/">常见问题</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发/">并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/序列化/">序列化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/慢查询/">慢查询</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/持久化/">持久化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日常开发/">日常开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日志/">日志</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集合/">集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/面向对象/">面向对象</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/高可用/">高可用</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">准备拯救世界的程序猿</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">MinerLee</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">MinerLee</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">文章归档</a></li>
+                
+                    <li><a href="/tags/">标签/分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:liyaocai1997@gmail.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" target="_blank" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" target="_blank" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-java并发（二）线程安全性与Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/20/java并发（二）线程安全性与Java内存模型/" class="article-date">
+      <time datetime="2018-08-19T16:09:20.000Z" itemprop="datePublished">2018-08-20</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      java并发（二）线程安全性与Java内存模型
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/并发/">并发</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/GC/">GC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/多线程/">多线程</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>谈到并发，首先要提到的就是安全，所有的并发编程的前提都是安全。在java中，</p>
+<ul>
+<li>什么是线程安全性？<ul>
+<li>在多线程并发访问一个对象或者类时，他始终都能表现出正确的行为，也就是说，我们在调用时不需要做额外的同步。</li>
+</ul>
+</li>
+<li><p>线程安全的几个特点</p>
+<a id="more"></a>
+<ul>
+<li><p>原子性<br>原子性，通俗来说就是几个操作在操作过程中，是不可以被其他线程干扰，举例来说</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> <span class="keyword">count</span> = <span class="number">0</span>;</span><br><span class="line"> <span class="comment">//在并发环境下，多个线程同时执行以下方法，可能会发生不安全操作</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> add() &#123;</span><br><span class="line">   ++<span class="keyword">count</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为++操作在java中是非原子的，它包含三个操作：读-改-写，那么在使用该类的时候我们就无法保证原子性  </p>
+</li>
+<li>可见性<br>可见性简单来说就是当一个线程修改了某个共享变量的值，这个更新能够立刻被其他线程所知晓，具体的原理我们在JMM中详细说。</li>
+<li>有序性<br>有序性，是保证线程内语义是串行的，禁止指令重排。举个例子<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int  a <span class="comment">;</span></span><br><span class="line">a = <span class="number">5</span><span class="comment">;</span></span><br><span class="line">a = <span class="number">6</span><span class="comment">;</span></span><br><span class="line">int  <span class="keyword">b </span>= a<span class="comment">;</span></span><br><span class="line">int c = a + <span class="keyword">b;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>当发生指令重排时，语句3先于2执行，则结果发生错误。尤其是在-server模式下，处于对性能的考虑，虚拟机会做出一些优化。<br>但是指令重排是有原则的，一下情况不发生重排，我列举一下：</p>
+<ul>
+<li>Happen-Benfore原则<ul>
+<li>程序顺序原则：一个线程内语义串行性</li>
+<li>volatile原则：volatile变量的写先发生于读，因此保证了可见性</li>
+<li>锁原则：解锁必然发生于随后的加锁前</li>
+<li>传递性：a先于b，b先于c，则a先于c</li>
+<li>线程的start方法先于他的每一个操作</li>
+<li>线程的所有操作先于线程的终结</li>
+<li>对象的构造函数执行、结束先于finalize方法<h5 id="java内存模型"><a href="#java内存模型" class="headerlink" title="java内存模型"></a>java内存模型</h5></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>计算机内存模型<br>我们知道java是一种可移植的语言，它是平台无关性的，所以这就要求JMM在任何平台下都能达到一致的内存访问效果。</p>
+<ul>
+<li>首先我们来了解一下在计算机中硬件中是如何实现并发的，在计算机中，IO操作的速度与CPU的速度是相差很多的，所以为了保证并发，在内存与处理器之间引入了<strong>高速缓存（Cache）</strong>，他的作用就是，在运算中，将使用到的数据拷贝到缓存中，当运算结束后再从缓存同步到内存之中，这样就解决了IO与CPU之间的速度差异问题。</li>
+<li>但是现在都是多核CPU，每个处理器都有自己的缓存，但是他们又共享同一主内存，那么当他们的运算涉及到同一块主内存时，就带来了缓存不一致的问题，所以就有了<strong>缓存一致性协议</strong>，我以一张图来表示他们之间的关系。</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/7432257-6d3da2a6a9d7a136.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="计算机硬件模型"></p>
+</li>
+<li>java内存区域<br>指的是java虚拟机在运行程序时管理的内存，JVM把它划分成几个区域<br><img src="https://upload-images.jianshu.io/upload_images/7432257-280b1bfe9e7b8a68.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Java虚拟机内存区域"><ul>
+<li>方法区（Method Area）：方法区属于线程共享的内存区域，又称Non-Heap（非堆），主要用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据，根据Java 虚拟机规范的规定，当方法区无法满足内存分配需求时，将抛出OutOfMemoryError 异常。值得注意的是在方法区中存在一个叫运行时常量池(Runtime Constant Pool）的区域，它主要用于存放编译器生成的各种字面量和符号引用，这些内容将在类加载后存放到运行时常量池中，以便后续使用。</li>
+<li>Java堆（Java Heap）：Java 堆也是属于线程共享的内存区域，它在虚拟机启动时创建，是Java 虚拟机所管理的内存中最大的一块，主要用于存放对象实例，几乎所有的对象实例都在这里分配内存，注意Java 堆是垃圾收集器管理的主要区域，因此很多时候也被称做GC 堆，如果在堆中没有内存满足实例分配需求，并且堆也无法再扩展时，将会抛出OutOfMemoryError 异常。</li>
+<li>程序计数器（Program Counter Register）：属于线程私有的数据区域，是一小块内存空间，主要代表当前线程所执行的字节码行号指示器。字节码解释器工作时，通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器来完成。</li>
+<li>本地方法栈(Native Method Stacks)：本地方法栈属于线程私有的数据区域，这部分主要与虚拟机用到的 Native 方法相关。</li>
+<li>虚拟机栈(Java Virtual Machine Stacks)：属于线程私有的数据区域，与线程同时创建，总数与线程关联，代表Java方法执行的内存模型。每个方法执行时都会创建一个栈桢来存储方法的的变量表、操作数栈、动态链接方法、返回值、返回地址等信息。</li>
+</ul>
+</li>
+<li>java内存模型<ul>
+<li>虚拟机规范中描述说Java内存模型的主要目标是定义程序中各个变量的访问规则， 即在虚拟机中将变量存储到内存和从内存中取出变量这样的底层细节。但是要注意的是，这里的<strong>变量</strong>不是通常意义上的变量，它包括了实例属性、类属性以及构成数组的元素，但是不包括局部变量与方法参数。为什么这么说呢？<br>根据上面的Java内存区域划分我们可以知道，在虚拟机栈中有一张局部变量表，存放了编译期可知的各种基本数据类型（boolean、 byte、 char、 short、 int、 float、 long、double） 、 <strong>对象引用</strong>（reference类型， 它不等同于对象本身， 可能是一个指向对象起始地址的引用指针， 也可能是指向一个代表对象的句柄或其他与此对象相关的位置） 和returnAddress类型（指向了一条字节码指令的地址），通俗一点说，如果局部变量是基本类型变量,则直接把这个变量的值保存在该变量对应的内存中.如果局部变量是引用类型的变量,则这个变量里存放的就是地址（<strong>注意的是：如果局部变量是一个reference类型， 它引用的对象在Java堆中可被各个线程共享， 但是reference本身在Java栈的局部变量表中， 它是线程私有的。</strong>），它们是线程私有的。</li>
+</ul>
+</li>
+</ul>
+<p>我给出一个例子，大家来看一下局部变量是否是线程安全的<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Demo</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>&#123;</span><br><span class="line">    Demo d = <span class="keyword">new</span> Demo();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) &#123;</span><br><span class="line">      <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        @Override</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">          d.safeAdd();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) &#123;</span><br><span class="line">      <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        @Override</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">          d.unSafeAdd();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unSafeAdd</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">      ++count;</span><br><span class="line">    &#125;</span><br><span class="line">    System.<span class="keyword">out</span>.println(<span class="string">"成员变量："</span> + count);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">safeAdd</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">      ++count;</span><br><span class="line">    &#125;</span><br><span class="line">    System.<span class="keyword">out</span>.println(<span class="string">"局部变量："</span> + count);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">局部变量：<span class="number">10000</span></span><br><span class="line">局部变量：<span class="number">10000</span></span><br><span class="line">局部变量：<span class="number">10000</span></span><br><span class="line">局部变量：<span class="number">10000</span></span><br><span class="line">局部变量：<span class="number">10000</span></span><br><span class="line">成员变量：<span class="number">10000</span></span><br><span class="line">成员变量：<span class="number">20472</span></span><br><span class="line">成员变量：<span class="number">29394</span></span><br><span class="line">成员变量：<span class="number">40341</span></span><br><span class="line">成员变量：<span class="number">43576</span></span><br></pre></td></tr></table></figure></p>
+<p>好了，了解完上面的，我们通过一张图看一下JMM。<br><img src="https://upload-images.jianshu.io/upload_images/7432257-f2b11b6a306e17f5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="JMM.png"></p>
+<ul>
+<li>工作内存<br>我们知道，jvm实际上是通过线程来执行程序的，在每个线程创建的时候，jvm会给它分配一个工作内存，从JMM来看，数据线程私有数据区域，从某个程度上讲则应该包括程序计数器、虚拟机栈以及本地方法栈。从计算机硬件来看，工作内存可能是Cache或者寄存器中。<ul>
+<li>主内存<br>主要存储的是Java实例对象，所有线程创建的实例对象都存放在主内存中，不管该实例对象是成员变量还是方法中的本地变量(也称局部变量)，当然也包括了共享的类信息、常量、静态变量。（对比上面的局部变量来思考一下）在JMM中主内存属于共享数据区域，从某个程度上讲应该包括了堆和方法区，从计算机硬件来看，主内存也就是我们的硬件内存。</li>
+<li>工作方式<br>对于一个实例对象中的成员方法而言，如果方法中包含本地变量是基本数据类型，将直接存储在工作内存的帧栈结构中，但倘若本地变量是引用类型，那么该变量的引用会存储在功能内存的帧栈中，而对象实例将存储在主内存(共享数据区域，堆)中。但对于实例对象的成员变量，不管它是基本数据类型还是引用类型，都会被存储到堆区。至于static变量以及类本身相关信息将会存储在主内存中。需要注意的是，在主内存中的实例对象可以被多线程共享，倘若两个线程同时调用了同一个对象的同一个方法，那么两条线程会将要操作的数据拷贝一份到自己的工作内存中，执行完成操作后才同步到主内存。</li>
+</ul>
+</li>
+</ul>
+<p>最后我们来总结一下，JMM、java内存区域以及计算机硬件之间的关系，</p>
+<ul>
+<li>JMM与java内存区域：<br>JMM实际上描述的是一种规则，是逻辑上的划分。JMM与Java内存区域唯一相似点，都存在共享数据区域和私有数据区域，在JMM中主内存属于共享数据区域，从某个程度上讲应该包括了堆和方法区，数据线程私有数据区域，从某个程度上讲则应该包括程序计数器、虚拟机栈以及本地方法栈。<ul>
+<li>JMM与计算机内存<br>JVM中线程的操作最后都会映射到硬件上，在计算机硬件中，并没有共享数据区域和私有数据区域的划分，实际上都是在计算机内存中。工作内存可能是Cache或者寄存器中，主内存可能直接对应于硬件中的内存。**<br><img src="https://upload-images.jianshu.io/upload_images/7432257-ecf491ce02776711.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="JMM与计算机内存"></li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
+        <p><span>发布时间:</span>2018-08-20, 00:09:20</p>
+        <p><span>最后更新:</span>2018-08-20, 00:14:09</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/" title="java并发（二）线程安全性与Java内存模型">https://www.goldminer.top/2018/08/20/java并发（二）线程安全性与Java内存模型/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://www.goldminer.top/2018/08/20/java并发（二）线程安全性与Java内存模型/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">
+                    Java并发（三）synchronized、volatile以及底层实现
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/20/（一）面向对象/">
+                    （一）面向对象
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#java内存模型"><span class="toc-number">1.</span> <span class="toc-text">java内存模型</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-6 i,
+        .toc-level-6 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"java并发（二）线程安全性与Java内存模型　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section id="comments">
+    <style> aside.comment-bar { margin: auto 30px; }</style>
+    <div id="disqus_thread"></div>
+    <script>
+        var disqus_config = function(){
+            this.page.url = 'https://www.goldminer.top/2018/08/20/java并发（二）线程安全性与Java内存模型/';
+            this.page.identifier = '2018/08/20/java并发（二）线程安全性与Java内存模型/';
+        };
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = '//.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/" title="上一篇: Java并发（三）synchronized、volatile以及底层实现">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/20/（一）面向对象/" title="下一篇: （一）面向对象">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/09/28/分布式架构（一）分布式演化/">分布式架构（一）架构演化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel高可用/">Redis--Sentinel客户端高可用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-JedisCluster/">Redis--JedisCluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Cluster/">Redis--Cluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel/">Redis--Sentinel</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-主从复制/">Redis--主从复制</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-常见问题/">ReRedis--常见问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——持久化/">Redis——持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——发布订阅-消息队列/">Redis——发布订阅/消息队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis——pipeline/">Redis——pipeline</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-慢查询/">Redis 慢查询</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（五）Lock以及AbstractQueuedSynchronizer/">java并发（五）Lock以及AbstractQueuedSynchronizer实现原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ssm框架使用slf4j-logback进行日志记录/">ssm框架使用slf4j+logback进行日志记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/spring-MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson/">spring MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Gson复杂对象自定义序列化类/">解决Gson序列化实体类属性为null时返回null</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">Java并发（三）synchronized、volatile以及底层实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（一）面向对象/">（一）面向对象</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（二）值传递与引用传递/">（二）值传递与引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（三）重载与重写/">（三）重载与重写</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/初探String/">初探String</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java虚拟机内存管理/">Java虚拟机内存管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java集合框架概述/">Java集合框架概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合操作类：Collections/">集合操作类：Collections</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——List接口及其实现类源码解析（JDK8）/">集合框架——List接口及其实现类源码解析（JDK8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——Map接口及其实现类源码解析（JDK7-8）/">集合框架——Map接口及其实现类源码解析（JDK7/8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/ThreadLocal实现与内存泄漏/">ThreadLocal实现与内存泄漏</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/MySQl-InnoDB概述/">MySQl InnoDB概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">Servlet工作原理解析（一）Servlet容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">Servlet3.0——模块化与动态Servlet</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2018 MinerLee
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 8;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-124193032-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "哟！又去写bug了" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "欢迎小主人" + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
