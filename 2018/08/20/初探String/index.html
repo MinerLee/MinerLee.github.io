@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="MinerLee">
+
+
+
+<meta name="description" content="平时只知道使用String，却不知道String有这么多奥秘，今天就来好好探讨一下。 #####String概述我们从源码下手1234public final class String    implements java.io.Serializable, Comparable&amp;lt;String&amp;gt;, CharSequence &amp;#123;    /** The value is used">
+<meta name="keywords" content="Java,源码,String">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探String">
+<meta property="og:url" content="https://blog.goldminer.top/2018/08/20/初探String/index.html">
+<meta property="og:site_name" content="MinerLee的博客">
+<meta property="og:description" content="平时只知道使用String，却不知道String有这么多奥秘，今天就来好好探讨一下。 #####String概述我们从源码下手1234public final class String    implements java.io.Serializable, Comparable&amp;lt;String&amp;gt;, CharSequence &amp;#123;    /** The value is used">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-0cec955bb76e6f94.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-41babab251d1f547.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-b4303d3e0c63cde6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-5f0df49b7fca9c56.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-244b367716c0a0de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-0f1a0270c1f26764.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-08-19T16:08:10.902Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="初探String">
+<meta name="twitter:description" content="平时只知道使用String，却不知道String有这么多奥秘，今天就来好好探讨一下。 #####String概述我们从源码下手1234public final class String    implements java.io.Serializable, Comparable&amp;lt;String&amp;gt;, CharSequence &amp;#123;    /** The value is used">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-0cec955bb76e6f94.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="MinerLee的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>初探String | MinerLee的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">MinerLee</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false">
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class="no-result">No results found <i class="fa fa-spinner fa-pulse"></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">文章归档</a></li>
+                        
+                            <li><a href="/tags/">标签/分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:liyaocai1997@163.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AQS/">AQS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GC/">GC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Gson/">Gson</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/InnoDB/">InnoDB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jedis/">Jedis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map/">Map</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sentinel/">Sentinel</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Servlet/">Servlet</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring原理/">Spring原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/String/">String</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/list/">list</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/logback/">logback</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pipeline/">pipeline</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/springCloud/">springCloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从复制/">主从复制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式/">分布式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/哨兵/">哨兵</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/常见问题/">常见问题</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发/">并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/序列化/">序列化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/慢查询/">慢查询</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/持久化/">持久化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日常开发/">日常开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日志/">日志</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集合/">集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/面向对象/">面向对象</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/高可用/">高可用</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">准备拯救世界的程序猿</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">MinerLee</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">MinerLee</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">文章归档</a></li>
+                
+                    <li><a href="/tags/">标签/分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:liyaocai1997@163.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" target="_blank" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" target="_blank" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
+</nav>
+      <div class="body-wrap"><article id="post-初探String" class="article article-type-post" itemscope="" itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/20/初探String/" class="article-date">
+      <time datetime="2018-08-19T16:04:13.000Z" itemprop="datePublished">2018-08-20</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      初探String
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/String/">String</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>平时只知道使用String，却不知道String有这么多奥秘，今天就来好好探讨一下。</p>
+<p>#####String概述<br>我们从源码下手<br><figure class="highlight zephir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">String</span></span></span><br><span class="line"><span class="class">    <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span>, <span class="title">Comparable</span>&lt;<span class="title">String</span>&gt;, <span class="title">CharSequence</span> </span>&#123;</span><br><span class="line">    <span class="comment">/** The value is used for character storage. */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">char</span> value[];</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>首先看到String是一个final的类，甚至所有的变量都是final修饰，final有什么用呢？</p>
+<ul>
+<li><p>final：final 可以用来修饰类、方法、变量，分别有不同的意义，final 修饰的 class 代表不可以继承扩展，final 的变量是不可以修改的，而 final 的方法也是不可以重写的。<br>在Java.lang包中的很多类都是被声明为final，目的是为了保证基础功能不被修改，保证平台的安全。<br><strong>很多人看到上面的说法会认为final修饰的类或者变量时不可变的，这是错误的，final不等于immutable，举个简单的例子：final List strList =new ArrayList…..只能保证list这个引用不可以被修改，但不能保证list的对象行为（关于对象行为，<a href="https://www.jianshu.com/p/cf60f3bbafd4" target="_blank" rel="noopener">面向对象</a>我在这里面有说过，不在赘述）</strong><br>######不可变性<br><img src="https://upload-images.jianshu.io/upload_images/7432257-0cec955bb76e6f94.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"></p>
+</li>
+<li><p>实现原理：</p>
+<ol>
+<li>final修饰类和成员变量<br>我们知道包括String是一个典型的immutable类，显然final是为了实现这个目标而来的，但是仅仅是final是不够的，就像我们上面说的List一样，String内部维护了一个char数组用来存储字符串中的字符，我可以对数组元素做修改啊。</li>
+<li>private成员变量<br>/*<em> The value is used for character storage. </em>/<br>private final char value[];<br>String类没有暴露任何内部成员字段</li>
+<li>没有任何setter方法<br>String提供的方法中没有任何一个可以让我们修改value字段</li>
+<li>构造器实现了深拷贝<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">    * Allocates a<span class="built_in"> new </span>&#123;@code String&#125; so that it represents the sequence of</span><br><span class="line">    * characters currently contained in the character<span class="built_in"> array </span>argument. The</span><br><span class="line">    * contents of the character<span class="built_in"> array </span>are copied; subsequent modification of</span><br><span class="line">    * the character<span class="built_in"> array </span>does<span class="built_in"> not </span>affect the newly created string.</span><br><span class="line">    *</span><br><span class="line">    * @param  value</span><br><span class="line">    *         The initial value of the string</span><br><span class="line">    */</span><br><span class="line">  <span class="keyword"> public</span> String(char value[]) &#123;</span><br><span class="line">       this.value = Arrays.copyOf(value, value.length);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+</ul>
+<p><strong>以上所说的是String成为了一个immutable类，这也是我们以后设计不可变类的一些方式</strong></p>
+<ul>
+<li>不可变的好处<br>其实简单来说就两个字：安全<br>举个简单的例子：在hashmap或者hashset中，使用String做键，如果使用可变类做键，那么可容易就破坏键值的唯一性<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="symbol">public</span> class Test &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  public static void main(<span class="keyword">String[] </span>args) &#123;</span><br><span class="line">    HashSet&lt;<span class="keyword">String&gt; </span><span class="keyword">strings </span>= new HashSet&lt;&gt;()<span class="comment">;</span></span><br><span class="line">    <span class="keyword">String </span>s = <span class="string">"1"</span><span class="comment">;</span></span><br><span class="line">    <span class="keyword">strings.add(s);</span></span><br><span class="line"><span class="keyword"> </span>   <span class="keyword">String </span><span class="built_in">s1</span> = s<span class="comment">;</span></span><br><span class="line">    <span class="built_in">s1</span> += <span class="string">"123"</span><span class="comment">;</span></span><br><span class="line">    System.out.println(<span class="keyword">strings);</span></span><br><span class="line"><span class="keyword"> </span>   HashSet&lt;<span class="keyword">StringBuilder&gt; </span><span class="keyword">stringBuilders </span>= new HashSet&lt;&gt;()<span class="comment">;</span></span><br><span class="line">    <span class="keyword">StringBuilder </span><span class="built_in">sb</span> = new <span class="keyword">StringBuilder("1");</span></span><br><span class="line"><span class="keyword"> </span>   <span class="keyword">stringBuilders.add(sb);</span></span><br><span class="line"><span class="keyword"> </span>   <span class="keyword">StringBuilder </span>sb1 = <span class="built_in">sb</span><span class="comment">;</span></span><br><span class="line">    sb1.append(<span class="string">"123"</span>)<span class="comment">;</span></span><br><span class="line">    System.out.println(<span class="keyword">stringBuilders);</span></span><br><span class="line"><span class="keyword"> </span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/7432257-41babab251d1f547.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"><br><strong>使用可变类的时候键值被修改，这是很大的问题</strong><br>第二个例子：多并发的场景下，使用可变类需要额外的同步并且很容易出问题，但是不可变类就不存在这些问题（为啥？不可变类的状态只有一种，并且由构造函数来控制，所以是无法修改的，也就不存在线程安全问题）</p>
+<ul>
+<li>性能：<br>在我们的应用程序中，String是大量被使用的，如果重复的创建大量的对象，必然会造成性能的下降，这里也是String使用final的目的之一，对于重复的字符串对象，使用常量池来避免大量的对象创建和销毁。<br>#####String常量池<br>在上一篇关于Java内存区域管理的文章中大概的说了一下方法区，在Java8中，String常量池移入了堆中<img src="https://upload-images.jianshu.io/upload_images/7432257-b4303d3e0c63cde6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"><br>大概是这个样子，详细的我就不再画了。<br>常量池是干啥的？<br>很明显，用来缓存String对象的呗，复用。<br>String常量可能会在两种时机进入常量池：</li>
+<li>编译期：通过双引号声明的常量（包括显示声明、静态编译优化后的常量，如”1”+”2”优化为常量”12”），在前端编译期将被静态的写入class文件中的“常量池”。该“常量池”会在类加载后被载入“内存中的常量池”，也就是我们平时所说的常量池。同时，JIT优化也可能产生类似的常量。<br>引用网上的一些例子：<figure class="highlight gauss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">使用 ” ” 双引号创建 ： <span class="keyword">String</span> s1 = “first”;</span><br><span class="line">使用字符串连接符拼接 ： <span class="keyword">String</span> s2=”se”+”<span class="built_in">cond</span>”;</span><br><span class="line">使用字符串加引用拼接 ： <span class="keyword">String</span> s12=”first”+s2;</span><br><span class="line">使用<span class="keyword">new</span> <span class="keyword">String</span>(“”)创建 ： <span class="keyword">String</span> s3 = <span class="keyword">new</span> <span class="keyword">String</span>(“three”);</span><br><span class="line">使用<span class="keyword">new</span> <span class="keyword">String</span>(“”)拼接 ： <span class="keyword">String</span> s4 = <span class="keyword">new</span> <span class="keyword">String</span>(“fo”)+”ur”;</span><br><span class="line">使用<span class="keyword">new</span> <span class="keyword">String</span>(“”)拼接 ： <span class="keyword">String</span> s5 = <span class="keyword">new</span> <span class="keyword">String</span>(“fo”)+<span class="keyword">new</span> <span class="keyword">String</span>(“ur”);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/7432257-5f0df49b7fca9c56.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"><br><strong>我们看到所有的字面量被放进了常量池，这里要注意的是下面这个例子：</strong><br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> String <span class="literal">result</span> = <span class="string">"hello"</span> + <span class="string">"world"</span> ;</span><br><span class="line">常量池中是helloworld</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">String a</span>=<span class="string">"hello"</span>;</span><br><span class="line"><span class="attribute">String b</span>=<span class="string">"world"</span>;</span><br><span class="line"><span class="attribute">String result</span> =a+b；</span><br><span class="line">常量池中是hello和world</span><br><span class="line">final String a=<span class="string">"hello"</span>;</span><br><span class="line"><span class="attribute">final String b</span>=<span class="string">"world"</span>;</span><br><span class="line"><span class="attribute">String result</span> =a+b；</span><br><span class="line">常量池中是hello和world 以及helloworld</span><br></pre></td></tr></table></figure>
+<ul>
+<li>运行期：调用String#intern()方法，可能将该String对象动态的写入上述“内存中常量池”<br><strong>但是，在Java6之后，由于SCP内存位置的变化，intern也发生了变化String#intern 方法时，如果存在堆中的对象，会直接保存对象的引用，而不会重新创建对象。</strong><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) &#123;</span><br><span class="line">    <span class="keyword">String</span> s = <span class="keyword">new</span> <span class="keyword">String</span>(<span class="string">"1"</span>);</span><br><span class="line">    s.intern();</span><br><span class="line">    <span class="keyword">String</span> s2 = <span class="string">"1"</span>;</span><br><span class="line">    System.out.<span class="built_in">println</span>(s == s2);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">String</span> s3 = <span class="keyword">new</span> <span class="keyword">String</span>(<span class="string">"1"</span>) + <span class="keyword">new</span> <span class="keyword">String</span>(<span class="string">"1"</span>);</span><br><span class="line">    s3.intern();</span><br><span class="line">    <span class="keyword">String</span> s4 = <span class="string">"11"</span>;</span><br><span class="line">    System.out.<span class="built_in">println</span>(s3 == s4);</span><br><span class="line">    <span class="comment">//这段代码更加直观</span></span><br><span class="line">    <span class="comment">//  String s3 = new String("1") + new String("1");</span></span><br><span class="line">    <span class="comment">//  System.out.println(s3 == s3.intern(););</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>这里我用的jdk8做的测试 结果为false和true<br><img src="https://upload-images.jianshu.io/upload_images/7432257-244b367716c0a0de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"></p>
+<p><strong>String s = new String(“1”); 第一句代码，生成了2个对象。常量池中的“1” 和 JAVA Heap 中的字符串对象。s.intern(); 这一句是 s 对象去常量池中寻找后发现 “1” 已经在常量池里了。接下来String s2 = “1”; 这句代码是生成一个 s2的引用指向常量池中的“1”对象。 结果就是 s 和 s2 的引用地址明显不同。<br>String s3 = new String(“1”) + new String(“1”);，这句代码中现在生成了2最终个对象，是字符串常量池中的“1” 和 JAVA Heap 中的 s3引用指向的对象。中间还有2个匿名的new String(“1”)我们不去讨论它们。此时s3引用对象内容是”11”，但此时常量池中是没有 “11”对象的。<br>接下来s3.intern();这一句代码，是将 s3中的“11”字符串放入 String 常量池中，因为此时常量池中不存在“11”字符串，关键点是 jdk76以后常量池不在 Perm 区域了，这块做了调整。常量池中不需要再存储一份对象了，可以直接存储堆中的引用。这份引用指向 s3 引用的对象。 也就是说引用地址是相同的。</strong><br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) &#123;</span><br><span class="line">    <span class="comment">//intern下调</span></span><br><span class="line">    <span class="keyword">String</span> s = <span class="keyword">new</span> <span class="keyword">String</span>(<span class="string">"1"</span>);</span><br><span class="line">    <span class="keyword">String</span> s2 = <span class="string">"1"</span>;</span><br><span class="line">    s.intern();</span><br><span class="line">    System.out.<span class="built_in">println</span>(s == s2);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">String</span> s3 = <span class="keyword">new</span> <span class="keyword">String</span>(<span class="string">"1"</span>) + <span class="keyword">new</span> <span class="keyword">String</span>(<span class="string">"1"</span>);</span><br><span class="line">    <span class="keyword">String</span> s4 = <span class="string">"11"</span>;</span><br><span class="line">    s3.intern();</span><br><span class="line">    System.out.<span class="built_in">println</span>(s3 == s4);</span><br><span class="line">     </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/7432257-0f1a0270c1f26764.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"></p>
+<p><strong>运行结果为false，false，为啥呢，String s = new String(“1”); 第一句代码，生成了2个对象。常量池中的“1” 和 JAVA Heap 中的字符串对象。。接下来String s2 = “1”;这一句是 s2 对象去常量池中寻找后发现 “1” 已经在常量池里了 ，所以s2引用的是常量池的对象，s.intern这句代码已经没有作用了，因为常量池中已经存在1了。 结果就是 s 和 s2 的引用地址明显不同<br>String s3 = new String(“1”) + new String(“1”);，这句代码中现在生成了2最终个对象，是字符串常量池中的“1” 和 JAVA Heap 中的 s3引用指向的对象。中间还有2个匿名的new String(“1”)我们不去讨论它们。此时s3引用对象内容是”11”，但此时常量池中是没有 “11”对象的。然后  String s4 = “11”;在常量池中生成了11对象，所以s4这时候是指向常量池中的对象的，s3.intern也没有任何影响，因为常量池中已经存在11对象了</strong><br><strong>最后总结一下就是：String#intern 方法时，如果常量池中存在对象，则返回常量池中的对象；否则，如果存在堆中的对象，会直接保存对象的引用，而不会重新创建对象。（常量池中既有对象也有引用）</strong></p>
+<ul>
+<li>intern注意事项<br>JAVA 使用 jni 调用c++实现的StringTable的intern方法, StringTable的intern方法跟Java中的HashMap的实现是差不多的, 只是不能自动扩容。默认大小是60013（Java8）。</li>
+</ul>
+<p>要注意的是，String的String Pool是一个固定大小的Hashtable，默认值大小长度是60013，如果放进String Pool的String非常多，就会造成Hash冲突严重，从而导致链表会很长，而链表长了后直接会造成的影响就是当调用String.intern时性能会大幅下降（因为要一个一个找）。<br>可以使用下面命令查看你的StringTable大小<br>-XX:+PrintStringTableStatistic…</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/20/初探String/">初探String</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
+        <p><span>发布时间:</span>2018-08-20, 00:04:13</p>
+        <p><span>最后更新:</span>2018-08-20, 00:08:10</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/20/初探String/" title="初探String">https://blog.goldminer.top/2018/08/20/初探String/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/08/20/初探String/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target="_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/08/20/（三）重载与重写/">
+                    （三）重载与重写
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/20/Java虚拟机内存管理/">
+                    Java虚拟机内存管理
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-6 i,
+        .toc-level-6 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"初探String　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section id="comments">
+    <style> aside.comment-bar { margin: auto 30px; }</style>
+    <div id="disqus_thread"></div>
+    <script>
+        var disqus_config = function(){
+            this.page.url = 'https://blog.goldminer.top/2018/08/20/初探String/';
+            this.page.identifier = '2018/08/20/初探String/';
+        };
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = '//.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/08/20/（三）重载与重写/" title="上一篇: （三）重载与重写">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/20/Java虚拟机内存管理/" title="下一篇: Java虚拟机内存管理">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/12/08/test-1/">test</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/07/test/">test</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/07/hello-world/">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/28/分布式架构（一）分布式演化/">分布式架构（一）架构演化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel高可用/">Redis--Sentinel客户端高可用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-JedisCluster/">Redis--JedisCluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Cluster/">Redis--Cluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel/">Redis--Sentinel</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-主从复制/">Redis--主从复制</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-常见问题/">ReRedis--常见问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——持久化/">Redis——持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——发布订阅-消息队列/">Redis——发布订阅/消息队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis——pipeline/">Redis——pipeline</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-慢查询/">Redis 慢查询</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（五）Lock以及AbstractQueuedSynchronizer/">java并发（五）Lock以及AbstractQueuedSynchronizer实现原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ssm框架使用slf4j-logback进行日志记录/">ssm框架使用slf4j+logback进行日志记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/spring-MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson/">spring MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Gson复杂对象自定义序列化类/">解决Gson序列化实体类属性为null时返回null</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">Java并发（三）synchronized、volatile以及底层实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（一）面向对象/">（一）面向对象</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（二）值传递与引用传递/">（二）值传递与引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（三）重载与重写/">（三）重载与重写</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/初探String/">初探String</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java虚拟机内存管理/">Java虚拟机内存管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java集合框架概述/">Java集合框架概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合操作类：Collections/">集合操作类：Collections</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——List接口及其实现类源码解析（JDK8）/">集合框架——List接口及其实现类源码解析（JDK8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——Map接口及其实现类源码解析（JDK7-8）/">集合框架——Map接口及其实现类源码解析（JDK7/8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/ThreadLocal实现与内存泄漏/">ThreadLocal实现与内存泄漏</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/MySQl-InnoDB概述/">MySQl InnoDB概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">Servlet工作原理解析（一）Servlet容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">Servlet3.0——模块化与动态Servlet</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2018 MinerLee
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit" title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 13;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-124193032-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "哟！又去写bug了" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "欢迎小主人" + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

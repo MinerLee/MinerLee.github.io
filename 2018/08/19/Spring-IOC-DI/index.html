@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="MinerLee">
+
+
+
+<meta name="description" content="#####Spring整体架构设计">
+<meta name="keywords" content="Spring原理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring IOC&#x2F;DI">
+<meta property="og:url" content="https://blog.goldminer.top/2018/08/19/Spring-IOC-DI/index.html">
+<meta property="og:site_name" content="MinerLee的博客">
+<meta property="og:description" content="#####Spring整体架构设计">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-0357cf7248b40623.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-392b62af96dcd3f1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-08-19T16:01:18.791Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring IOC&#x2F;DI">
+<meta name="twitter:description" content="#####Spring整体架构设计">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-0357cf7248b40623.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="MinerLee的博客" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Spring IOC/DI | MinerLee的博客</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">MinerLee</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false">
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class="no-result">No results found <i class="fa fa-spinner fa-pulse"></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">文章归档</a></li>
+                        
+                            <li><a href="/tags/">标签/分类</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:liyaocai1997@163.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AQS/">AQS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GC/">GC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Gson/">Gson</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/InnoDB/">InnoDB</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jedis/">Jedis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map/">Map</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sentinel/">Sentinel</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Servlet/">Servlet</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring原理/">Spring原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/String/">String</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/list/">list</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/logback/">logback</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pipeline/">pipeline</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/springCloud/">springCloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从复制/">主从复制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式/">分布式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/哨兵/">哨兵</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/常见问题/">常见问题</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发/">并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/序列化/">序列化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/慢查询/">慢查询</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/持久化/">持久化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日常开发/">日常开发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/日志/">日志</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集合/">集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/面向对象/">面向对象</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/高可用/">高可用</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">准备拯救世界的程序猿</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">MinerLee</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">MinerLee</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">这不是Bug,只是未知的新特性。</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">文章归档</a></li>
+                
+                    <li><a href="/tags/">标签/分类</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:liyaocai1997@163.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 简书" target="_blank" href="https://www.jianshu.com/u/7ba34f6c07c9" title="简书"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="/netease" title="网易云音乐"></a>
+                            
+                                <a class="fa 微信" target="_blank" href="/Wechat" title="微信"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
+</nav>
+      <div class="body-wrap"><article id="post-Spring-IOC-DI" class="article article-type-post" itemscope="" itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/19/Spring-IOC-DI/" class="article-date">
+      <time datetime="2018-08-19T15:54:20.000Z" itemprop="datePublished">2018-08-19</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Spring IOC/DI
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Spring/">Spring</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring原理/">Spring原理</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>#####Spring整体架构设计<br><img src="https://upload-images.jianshu.io/upload_images/7432257-0357cf7248b40623.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"><br><a id="more"></a></p>
+<p>#####Spring IOC容器：<br>在了解Spring IOC容器之前我们需要了解一些概念：</p>
+<ul>
+<li><p>依赖倒置原则（DIP）：一种软件架构设计的原则（抽象概念）。</p>
+</li>
+<li><p>控制反转（IoC）：一种反转流、依赖和接口的方式。</p>
+</li>
+<li><p>依赖注入（DI）：IoC的一种实现方式，用来反转依赖（IoC的一种具体实现方式）。</p>
+</li>
+<li><p>IoC容器：依赖注入的框架，用来映射依赖，管理对象创建和生存周期（DI框架）。<br>######依赖倒置原则（DIP）：高层模块不应该依赖底层模块，两者都应该依赖抽象。抽象不应该依赖细节，细节应该依赖抽象。在依赖之间定义一个抽象的接口使得高层模块调用接口，而底层模块实现接口的定义，以此来有效控制耦合关系，达到依赖于抽象的设计目标。<br>我们来看一个例子：</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OrderService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> OrderDao orderDao = <span class="keyword">new</span> OrderDao();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * save order.</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> save(String <span class="keyword">order</span>) &#123;</span><br><span class="line">    orderDao.save(<span class="keyword">order</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(String[] args) &#123;</span><br><span class="line">    OrderService orderService = <span class="keyword">new</span> OrderService();</span><br><span class="line">    orderService.save(<span class="string">"order1"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OrderDao</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> save(String <span class="keyword">order</span>) &#123;</span><br><span class="line">    System.out.println(<span class="keyword">order</span>+<span class="string">"save in Mysql"</span>);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><strong>在这里，高层组件依赖底层组件的实现，而不是依赖抽象，如果需求发生了变化，需要使用sqlserver，那么我需要更改高层组件，这是不符合DIP原则的，依赖倒置原则要求高层组件不应当依赖底层组件的具体的实现，而应该依赖于一个简单的抽象，这个抽象对应着具体工作的实现。</strong><br>好了，我们现在改一下代码：<br><figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> class OrderService &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> OrderDao orderDao ;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * save order.</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">save</span>(<span class="keyword">String</span> order) &#123;</span><br><span class="line">    orderDao = <span class="keyword">new</span> MysqlOrderDao();</span><br><span class="line">    orderDao.<span class="built_in">save</span>(order);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) &#123;</span><br><span class="line">    OrderService orderService = <span class="keyword">new</span> OrderService();</span><br><span class="line">    orderService.<span class="built_in">save</span>(<span class="string">"order1"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>抽象出一个接口，高层模块和底层模块都依赖于这个接口，实际上<strong>不应该把DIP与DI、IOC强行扯在一起，所有面向对象的设计都应该遵循这个原则</strong></p>
+<p>######IOC是什么：IOC就是我们所说的控制反转，是一种从主动到被动设计思想（好莱坞原则），所有的组件都是被动的（Passive），所有的组件初始化和调用都由容器负责。是一个广义的说法。任何框架都是IoC，你的代码不再被直接调用，而是被框架代码调用。例如模板方法模式（一个抽象类公开定义了执行它的方法的方式/模板。它的子类可以按需要重写部分方法实现，但调用将以抽象类中定义的方式进行），我们这里说的是狭义的IOC，即DI。举个例子来说，假如我们通过多个类之间的合作来实现某项业务逻辑，这样呢在每个对象中就需要获取它所依赖的对象的引用，这个过程就需要依靠自身来实现，那么代码的耦合度就会非常高。IOC对在自身对象中的一个内置对象的控制反转，反转后不再由自己本身的对象进行控制这个内置对象的创建，而是由IOC容器去控制这个内置对象的创建，即依赖对象不在被依赖模块的类中直接通过new来获取。<br><img src="https://upload-images.jianshu.io/upload_images/7432257-392b62af96dcd3f1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图片.png"></p>
+<ul>
+<li>IOC的作用：<br>有了IoC容器后，把创建和查找依赖对象的控制权交给了容器，由容器进行注入组合对象，所以对象与对象之间是松散耦合，不需要考虑对象间复杂的耦合关系，而且提供了对 对象的可靠的管理，极大地降低了开发的复杂性。<br>1.对基于接口编程的支持<br>2.减少单件和抽象工厂的依赖<br>3.降低业务和框架的耦合<br>4.业务组件可复用,可插拔<br>######DI：</li>
+<li>DI是什么：即“依赖注入”，是IOC设计模式的一种实现。就是将依赖对象的创建和绑定转移到被依赖对象类的外部来实现，由外部动态的将某个依赖关系注入到组件之中。依赖注入的目的并非为软件系统带来更多功能，而是为了提升组件重用的频率，并为系统搭建一个灵活、可扩展的平台。<br>现在我们来改一下代码：<br>######IOC容器:<br>IOC容器实际上是一种DI框架，IOC容器具有以下的功能：</li>
+<li>动态创建、注入依赖bean。</li>
+<li>管理对象生命周期。</li>
+<li><p>映射依赖关系。<br><strong>我们现在来总结一下，DIP是一种软件设计的原则，IOC是在基于好莱坞原则的一种设计模式，DI是IOC模式的一种具体实现，IOC容器是一种DI的框架（我们也可以手动创建）。DI与DIP并没有任何关系，换句话说，如果Java没有接口、多态，依赖倒置就无从谈起。而依赖注入依然可以存在</strong></p>
+</li>
+<li><p>Spring  IOC容器设计与实现<br>Spring 容器是Spring中最核心的部分，他管理着bean的创建，配置和管理，我们现在来看Spring IOC容器，Spring IOC容器有三个重要组件：</p>
+<ul>
+<li>核心组件 <ul>
+<li>Beans<br>Bean在Spring中就像是Object在OOP中的意义一样，Spring的核心是DI，把对象之间的依赖关系通过配置文件或者注解来管理，通过Spring IOC容器来实现该机制，容器中放的就是被Bean包裹的对象， Spring通过将对象包装在Bean中从而达到管理等一些操作的目的。</li>
+<li>Context<br>Bean包装的是对象，对象中必然有数据，那么如何给这些数据提供生存环境就是Context的责任，Context要发现每个Bean之间关系，并且为他们建立维护关系，所以Context就是一个Bean关系集合，又称为IOC容器。</li>
+<li>Core<br>Core就是在发现、建立和维护每个Bean之间的关系时所需要的一系列工具。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
+        <p><span>发布时间:</span>2018-08-19, 23:54:20</p>
+        <p><span>最后更新:</span>2018-08-20, 00:01:18</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/19/Spring-IOC-DI/" title="Spring IOC/DI">https://blog.goldminer.top/2018/08/19/Spring-IOC-DI/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/08/19/Spring-IOC-DI/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target="_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/08/19/ThreadLocal实现与内存泄漏/">
+                    ThreadLocal实现与内存泄漏
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/19/MySQl-InnoDB概述/">
+                    MySQl InnoDB概述
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-6 i,
+        .toc-level-6 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Spring IOC/DI　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section id="comments">
+    <style> aside.comment-bar { margin: auto 30px; }</style>
+    <div id="disqus_thread"></div>
+    <script>
+        var disqus_config = function(){
+            this.page.url = 'https://blog.goldminer.top/2018/08/19/Spring-IOC-DI/';
+            this.page.identifier = '2018/08/19/Spring-IOC-DI/';
+        };
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = '//.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/08/19/ThreadLocal实现与内存泄漏/" title="上一篇: ThreadLocal实现与内存泄漏">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/19/MySQl-InnoDB概述/" title="下一篇: MySQl InnoDB概述">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/12/08/test-1/">test</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/07/test/">test</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/07/hello-world/">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/28/分布式架构（一）分布式演化/">分布式架构（一）架构演化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel高可用/">Redis--Sentinel客户端高可用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-JedisCluster/">Redis--JedisCluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Cluster/">Redis--Cluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel/">Redis--Sentinel</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-主从复制/">Redis--主从复制</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-常见问题/">ReRedis--常见问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——持久化/">Redis——持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——发布订阅-消息队列/">Redis——发布订阅/消息队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis——pipeline/">Redis——pipeline</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-慢查询/">Redis 慢查询</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（五）Lock以及AbstractQueuedSynchronizer/">java并发（五）Lock以及AbstractQueuedSynchronizer实现原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ssm框架使用slf4j-logback进行日志记录/">ssm框架使用slf4j+logback进行日志记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/spring-MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson/">spring MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Gson复杂对象自定义序列化类/">解决Gson序列化实体类属性为null时返回null</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">Java并发（三）synchronized、volatile以及底层实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（一）面向对象/">（一）面向对象</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（二）值传递与引用传递/">（二）值传递与引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（三）重载与重写/">（三）重载与重写</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/初探String/">初探String</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java虚拟机内存管理/">Java虚拟机内存管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java集合框架概述/">Java集合框架概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合操作类：Collections/">集合操作类：Collections</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——List接口及其实现类源码解析（JDK8）/">集合框架——List接口及其实现类源码解析（JDK8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——Map接口及其实现类源码解析（JDK7-8）/">集合框架——Map接口及其实现类源码解析（JDK7/8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/ThreadLocal实现与内存泄漏/">ThreadLocal实现与内存泄漏</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/MySQl-InnoDB概述/">MySQl InnoDB概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">Servlet工作原理解析（一）Servlet容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">Servlet3.0——模块化与动态Servlet</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2018 MinerLee
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit" title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 13;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-124193032-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "哟！又去写bug了" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "欢迎小主人" + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
