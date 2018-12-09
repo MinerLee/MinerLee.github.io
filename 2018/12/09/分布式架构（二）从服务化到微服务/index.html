@@ -15,21 +15,18 @@
 
 
 
-<meta name="description" content="######软引用（Soft Reference）表示一个对象处在有用但非必须的状态。如果一个对象只具有软引用，在内存空间充足时，GC就不会回收该对象；当内存空间不足时，GC会回收该对象的内存（回收发生在OutOfMemoryError之前）。12345public static void main(String[] args) &amp;#123;                 SoftReferen">
-<meta name="keywords" content="Java,源码">
+<meta name="description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：  随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越">
+<meta name="keywords" content="微服务,分布式">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Java——软引用、弱引用应用">
-<meta property="og:url" content="https://blog.goldminer.top/2018/08/19/Java——软引用、弱引用应用/index.html">
+<meta property="og:title" content="分布式架构（二）从服务化到微服务概述">
+<meta property="og:url" content="https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/index.html">
 <meta property="og:site_name" content="MinerLee的博客">
-<meta property="og:description" content="######软引用（Soft Reference）表示一个对象处在有用但非必须的状态。如果一个对象只具有软引用，在内存空间充足时，GC就不会回收该对象；当内存空间不足时，GC会回收该对象的内存（回收发生在OutOfMemoryError之前）。12345public static void main(String[] args) &amp;#123;                 SoftReferen">
+<meta property="og:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：  随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-6a5883633544f6f9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-627cc123ce2d0acb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:updated_time" content="2018-08-19T16:02:40.022Z">
+<meta property="og:updated_time" content="2018-12-09T07:07:32.411Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Java——软引用、弱引用应用">
-<meta name="twitter:description" content="######软引用（Soft Reference）表示一个对象处在有用但非必须的状态。如果一个对象只具有软引用，在内存空间充足时，GC就不会回收该对象；当内存空间不足时，GC会回收该对象的内存（回收发生在OutOfMemoryError之前）。12345public static void main(String[] args) &amp;#123;                 SoftReferen">
-<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-6a5883633544f6f9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta name="twitter:title" content="分布式架构（二）从服务化到微服务概述">
+<meta name="twitter:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：  随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -61,7 +58,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>Java——软引用、弱引用应用 | MinerLee的博客</title>
+<title>分布式架构（二）从服务化到微服务概述 | MinerLee的博客</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -278,11 +275,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
 </nav>
-      <div class="body-wrap"><article id="post-Java——软引用、弱引用应用" class="article article-type-post" itemscope="" itemprop="blogPost">
+      <div class="body-wrap"><article id="post-分布式架构（二）从服务化到微服务" class="article article-type-post" itemscope="" itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018/08/19/Java——软引用、弱引用应用/" class="article-date">
-      <time datetime="2018-08-19T15:53:08.000Z" itemprop="datePublished">2018-08-19</time>
+      <a href="/2018/12/09/分布式架构（二）从服务化到微服务/" class="article-date">
+      <time datetime="2018-12-09T05:00:29.000Z" itemprop="datePublished">2018-12-09</time>
 </a>
 
 
@@ -297,7 +294,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Java——软引用、弱引用应用
+      分布式架构（二）从服务化到微服务概述
     </h1>
   
 
@@ -306,13 +303,13 @@
       <div class="article-info article-info-post">
         
     <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/Java/">Java</a>
+    <a class="article-category-link" href="/categories/微服务/">微服务</a>
     </div>
 
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式/">分布式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -322,26 +319,26 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <p>######软引用（Soft Reference）<br>表示一个对象处在有用但非必须的状态。如果一个对象<strong>只具有</strong>软引用，在内存空间充足时，GC就不会回收该对象；当内存空间不足时，GC会回收该对象的内存（回收发生在OutOfMemoryError之前）。<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) &#123;</span><br><span class="line">         </span><br><span class="line">        SoftReference&lt;Cache &gt; sr = <span class="keyword">new</span> SoftReference&lt;Cache &gt;(<span class="keyword">new</span> Cache ());</span><br><span class="line">        System.out.<span class="built_in">println</span>(sr.<span class="built_in">get</span>());</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
-<a id="more"></a>
-<blockquote>
-<p>软引用可以和一个引用队列（ReferenceQueue）联合使用，如果软引用所引用的对象被GC回收，Java虚拟机就会把这个软引用加入到与之关联的引用队列中，以便在恰当的时候将该软引用回收。但是由于GC线程的优先级较低，通常手动调用System.gc()并不能立即执行GC，因此弱引用所引用的对象并不一定会被马上回收。</p>
-</blockquote>
-<p>######弱引用（Weak Reference）<br>用来描述非必须的对象。它类似软引用，但是强度比软引用更弱一些：弱引用具有更短的生命.GC在扫描的过程中，一旦发现<strong>只</strong>具有被弱引用关联的对象，都会回收掉被弱引用关联的对象。换言之，无论当前内存是否紧缺，GC都将回收被弱引用关联的对象。<br><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WeakReference&lt;<span class="keyword">Cache</span> &gt; wr = <span class="literal">new</span> WeakReference&lt;<span class="keyword">Cache</span> &gt;(<span class="literal">new</span> <span class="keyword">Cache</span> ());</span><br></pre></td></tr></table></figure></p>
-<blockquote>
-<p>同样弱引用也可以和一个引用队列（ReferenceQueue）联合使用，如果弱引用所引用的对象被GC回收了，Java虚拟机就会把这个弱引用加入到与之关联的引用队列中，以便在恰当的时候将该弱引用回收。</p>
-</blockquote>
-<p>######ReferenceQueue<br><figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reference queues, to which registered reference objects are appended by the</span></span><br><span class="line"><span class="comment"> * garbage collector after the appropriate reachability changes are detected.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure></p>
+        <h1 id="从服务化到微服务概述"><a href="#从服务化到微服务概述" class="headerlink" title="从服务化到微服务概述"></a>从服务化到微服务概述</h1><p>对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。</p>
+<p>对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：</p>
 <ul>
-<li>引用队列，在检测到适当的可到达性更改后，垃圾回收器将已注册的引用对象添加到该队列中。但实际内部并非有实际的存储结构，它的存储是依赖于内部节点之间的关系来表达。可以理解为queue是一个类似于链表的结构，这里的节点其实就是reference本身。可以理解为queue为一个链表的容器，其自己仅存储当前的head节点，而后面的节点由每个reference节点自己通过next来保持即可。</li>
-<li>queue的意义在于，我们可以在外部对这个queue进行监控。即如果有对象即将被回收，那么相应的reference对象就会被放到这个queue里。我们拿到reference，就可以再作一些事务。<br>而如果不使用的话，就只有不断地轮询reference对象，通过判断里面的get是否返回null( phantomReference对象不能这样作，其get始终返回null，因此它只有带queue的构造函数 )。这两种方法均有相应的使用场景，取决于实际的应用。如weakHashMap中就选择去查询queue的数据，来判定是否有对象将被回收。而ThreadLocalMap，则采用判断get()是否为null来作处理。</li>
-<li>如果我们在创建一个引用对象时，指定了ReferenceQueue，那么当引用对象指向的对象达到合适的状态（根据引用类型不同而不同）时，GC 会把引用对象本身添加到这个队列中，方便我们处理它，因为“引用对象指向的对象 GC 会自动清理，但是引用对象本身也是对象（是对象就占用一定资源），所以需要我们自己清理。”<br><img src="https://upload-images.jianshu.io/upload_images/7432257-6a5883633544f6f9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"></li>
+<li>随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越困难SSM时代的单体化应用从小小的Demo变成了单体地狱。项目想要引入新的技术将变得极为困难。</li>
+<li>从另一方面来说，持续部署变的极为困难，以公司的Sass业务为代表，极为频繁的更新无法及时部署到生产环境。</li>
+<li>各种不同的业务需求的机器性能总是不同的，单一机器难以合理的满足单体应用，也难以满足高可用的需求，一个吃饱全家不饿变成了一个挂掉，全家GG。</li>
 </ul>
-<figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ReferenceQueue&lt; Cache &gt; rq=<span class="keyword">new</span> <span class="type">ReferenceQueue</span>();</span><br><span class="line">WakeReference &lt;Cache&gt;wr=<span class="keyword">new</span> <span class="type">WakeReference</span>(<span class="keyword">new</span> <span class="type">Cache</span> (),rq);</span><br></pre></td></tr></table></figure>
-<p><strong>需要注意的是如果是显示声明的对象,如下图所示，如果不置为null，那么永远存在一个指向该对象的强引用,如下图，将不会对该对象进行回收</strong><br><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Cache</span> <span class="keyword">cache</span> = <span class="literal">new</span> <span class="keyword">Cache</span>();</span><br><span class="line">  ReferenceQueue&lt;<span class="keyword">Cache</span>&gt; referenceQueue = <span class="literal">new</span> ReferenceQueue();</span><br><span class="line">  WeakReference wr = <span class="literal">new</span> WeakReference(<span class="keyword">cache</span>, referenceQueue);</span><br><span class="line">  <span class="comment">//cache = null;</span></span><br><span class="line">  System.gc();</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://upload-images.jianshu.io/upload_images/7432257-627cc123ce2d0acb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png"></p>
-<p><strong>所以显示声明一个需要软引用或者弱引用的对象时，要设置为null，取消对他的强引用，才会在GC时回收</strong><br><figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ReferenceQueue&lt; <span class="keyword">Cache </span>&gt; rq=new ReferenceQueue()<span class="comment">;</span></span><br><span class="line"><span class="keyword">Cache </span><span class="keyword">cache </span>= new <span class="keyword">Cache </span>()<span class="comment">;</span></span><br><span class="line">WakeReference wr=new WakeReference(<span class="keyword">cache </span>,rq)<span class="comment">;</span></span><br><span class="line"><span class="keyword">cache </span>= null<span class="comment">;</span></span><br><span class="line">System.gc()<span class="comment">;</span></span><br></pre></td></tr></table></figure></p>
-<p>######应用场景<br>两者都可以实现缓存功能，但软引用实现的缓存通常用在服务端，而在移动设备中的内存更为紧缺，对垃圾回收更为敏感，因此android中的缓存通常是用弱引用来实现（比如LruCache） </p>
+<p>为了满足互联网时代的发展，SOA出现了，关于SOA与微服务其实存在着很多的讨论，这里我们要说一下SOA准确的来说具有两重含义，</p>
+<ol>
+<li><p>SOA即面向服务架构，服务间松散耦合，支持服务的封装，服务注册和自动发现，以服务契约方式定义服务交互方式。</p>
+</li>
+<li><p>说的是Enterprise Service Bus(ESB)、WebSphere Process Server（WPS）、WebSphere Integration Developer（WID）、WebSphere Message Broker（WMB）这些具体的产品。我们日常所说的SOA多是指以ESB为代表的具体实现。 </p>
+</li>
+</ol>
+<p>SOA其实就是为了解耦，解耦的本质就是为了去中心化，但是SOA有个很大的问题是，按照SOA的思路这些系统总会在某个环节上走向集中，所以去中心化做得很不彻底。</p>
+<ul>
+<li>中心化也就是我们所说的ESB以及web service，SB的根本诉求是为了解决异构系统之间的连通性，通过协议转换、消息解析、消息路由把服务提供者的数据传送到服务消费者。所以，ESB是中心化的，很重，有一定的逻辑，但它的确可以解决一些公用逻辑的问题。</li>
+<li>去中心化的根本诉求就是扩展性，通过一系列的微小服务来实现整体的业务流程，有效的拆分应用，更在于对扩展性、容错性、DevOps的支持，实现敏捷开发和部署，也就是我们说的微服务。</li>
+</ul>
+<p>好了，这么看起来有点太烧脑了，我们通俗一点，很多人认为SOA与微服务是两个东西，但是我始终认为微服务架构是SOA架构的另一种实现方式，准确的来说是彻底去中心化的SOA，它们的分歧在于对服务的治理，是分布还是集中。当然这只是从大的方向上来说，具体的微服务实现细节是很多的，微服务架构首先要关注的不是RPC/ServiceDiscovery/Circuit Breaker这些概念，也不是Eureka/Docker/SpringCloud/Zipkin这些技术框架，而是服务的边界、职责划分，划分错误就会陷入大量的服务间的相互调用和分布式事务中。</p>
 
       
     </div>
@@ -350,13 +347,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></p>
+        <p><span>本文标题:</span><a href="/2018/12/09/分布式架构（二）从服务化到微服务/">分布式架构（二）从服务化到微服务概述</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
-        <p><span>发布时间:</span>2018-08-19, 23:53:08</p>
-        <p><span>最后更新:</span>2018-08-20, 00:02:40</p>
+        <p><span>发布时间:</span>2018-12-09, 13:00:29</p>
+        <p><span>最后更新:</span>2018-12-09, 15:07:32</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018/08/19/Java——软引用、弱引用应用/" title="Java——软引用、弱引用应用">https://blog.goldminer.top/2018/08/19/Java——软引用、弱引用应用/</a>
-            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/08/19/Java——软引用、弱引用应用/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2018/12/09/分布式架构（二）从服务化到微服务/" title="分布式架构（二）从服务化到微服务概述">https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -368,16 +365,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018/08/19/MySQl-InnoDB概述/">
-                    MySQl InnoDB概述
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">
-                    Servlet工作原理解析（一）Servlet容器
+                <a href="/2018/09/28/分布式架构（一）分布式演化/">
+                    分布式架构（一）架构演化
                 </a>
             </div>
         
@@ -389,7 +380,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#从服务化到微服务概述"><span class="toc-number">1.</span> <span class="toc-text">从服务化到微服务概述</span></a></li></ol>
         
     </div>
     <style>
@@ -425,7 +416,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"Java——软引用、弱引用应用　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"分布式架构（二）从服务化到微服务概述　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -444,8 +435,8 @@
     <div id="disqus_thread"></div>
     <script>
         var disqus_config = function(){
-            this.page.url = 'https://blog.goldminer.top/2018/08/19/Java——软引用、弱引用应用/';
-            this.page.identifier = '2018/08/19/Java——软引用、弱引用应用/';
+            this.page.url = 'https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/';
+            this.page.identifier = '2018/12/09/分布式架构（二）从服务化到微服务/';
         };
         var loadComment = function(){
             var d = document, s = d.createElement('script');
@@ -467,15 +458,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018/08/19/MySQl-InnoDB概述/" title="上一篇: MySQl InnoDB概述">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/" title="下一篇: Servlet工作原理解析（一）Servlet容器">
+            <a href="/2018/09/28/分布式架构（一）分布式演化/" title="下一篇: 分布式架构（一）架构演化">
                 <i class="fa fa-angle-right"></i>
             </a>
         

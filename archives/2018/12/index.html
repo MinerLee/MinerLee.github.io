@@ -15,18 +15,17 @@
 
 
 
-<meta name="description" content="最近复习java并发的知识，在这之前，我们先了解一下java中的一些概念：  我们常说同步与异步。通俗来说他们描述的是在异步环境下（多个线程时不相干的），并发线程之间的访问共享资源时通过消息通知的协作方式。">
-<meta name="keywords" content="Java,并发">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Java并发（一）并发基本概念">
-<meta property="og:url" content="https://blog.goldminer.top/2018/08/18/Java并发（一）并发基本概念/index.html">
+<meta name="description" content="不想谈恋爱的程序员不是好产品。">
+<meta name="keywords" content="后端,Java,Spring,Netty,分布式,开发者,程序猿,并发,SOA,编程,代码,开源,IT网站,Developer,Programmer,Coder,Geek,mybatis,Dubbo,并发,源码">
+<meta property="og:type" content="website">
+<meta property="og:title" content="MinerLee的博客">
+<meta property="og:url" content="https://blog.goldminer.top/archives/2018/12/index.html">
 <meta property="og:site_name" content="MinerLee的博客">
-<meta property="og:description" content="最近复习java并发的知识，在这之前，我们先了解一下java中的一些概念：  我们常说同步与异步。通俗来说他们描述的是在异步环境下（多个线程时不相干的），并发线程之间的访问共享资源时通过消息通知的协作方式。">
+<meta property="og:description" content="不想谈恋爱的程序员不是好产品。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-08-19T16:39:32.281Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Java并发（一）并发基本概念">
-<meta name="twitter:description" content="最近复习java并发的知识，在这之前，我们先了解一下java中的一些概念：  我们常说同步与异步。通俗来说他们描述的是在异步环境下（多个线程时不相干的），并发线程之间的访问共享资源时通过消息通知的协作方式。">
+<meta name="twitter:title" content="MinerLee的博客">
+<meta name="twitter:description" content="不想谈恋爱的程序员不是好产品。">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -58,7 +57,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>Java并发（一）并发基本概念 | MinerLee的博客</title>
+<title>Archives: 2018/12 | MinerLee的博客</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -68,8 +67,8 @@
         fancybox: true,
         animate: true,
         isHome: false,
-        isPost: true,
-        isArchive: false,
+        isPost: false,
+        isArchive: true,
         isTag: false,
         isCategory: false,
         fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
@@ -275,205 +274,60 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
 </nav>
-      <div class="body-wrap"><article id="post-Java并发（一）并发基本概念" class="article article-type-post" itemscope="" itemprop="blogPost">
+      <div class="body-wrap">
   
-    <div class="article-meta">
-      <a href="/2018/08/18/Java并发（一）并发基本概念/" class="article-date">
-      <time datetime="2018-08-17T22:25:26.000Z" itemprop="datePublished">2018-08-18</time>
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2018" class="archive-year">2018</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+          <div class="article-meta">
+              <a href="/2018/12/09/分布式架构（二）从服务化到微服务/" class="archive-article-date">
+      <time datetime="2018-12-09T05:00:29.000Z" itemprop="datePublished">12-09</time>
 </a>
 
 
-    </div>
+        </div>
+         
   
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      Java并发（一）并发基本概念
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2018/12/09/分布式架构（二）从服务化到微服务/">分布式架构（二）从服务化到微服务概述</a>
     </h1>
   
 
-      </header>
-      
-      <div class="article-info article-info-post">
-        
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/并发/">并发</a>
-    </div>
-
-
-        
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/并发/">并发</a></li></ul>
-    </div>
-
-        <div class="clearfix"></div>
-      </div>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
+        <div class="article-info info-on-archive">
           
-        <p>最近复习java并发的知识，在这之前，我们先了解一下java中的一些概念：</p>
-<ul>
-<li>我们常说同步与异步。通俗来说他们描述的是在异步环境下（多个线程时不相干的），并发线程之间的访问共享资源时通过消息通知的协作方式。<a id="more"></a>
-<ul>
-<li>同步： 在一个线程对共享资源进行访问时，其他线程需要等待，可能会阻塞，在后面线程状态中再详细谈。</li>
-<li>异步：在一个线程对共享资源进行访问时，其他线程在等待的时间，可以去做自己的事情。</li>
-<li>java中提供的同步机制：wait/notify、Synchronized关键字、volatile、并发容器、、基于AQS的同步工具类（可重入锁等）、ThreadLocal、原子类等</li>
-</ul>
-</li>
-<li>再来说一下 并行与串行：<ul>
-<li>并行： 多个任务是同时执行的</li>
-<li>串行： 多个任务是顺序执行的<br><strong>关注的是任务的执行方式，在多线程中，串行的任务一个一个执行，直到结束。并行中多个任务在同一时间点执行。</strong><br>最后来说一下并发，通俗来说，就是多个任务在同一个时间段内去执行，要与并行的同一时间点区别开来，举个例子，并行：运动会，十名运动员同时在自己的跑道上奔跑；并发：运动会上，十名运动员接力跑。<br>来点理论的：</li>
-</ul>
-</li>
-<li>并发与并行其实都是多个任务一起执行，但是并行更侧重的是一个时间点，也就是说多个任务是同时执行的，是物理上的同时执行，要求多个CPU核心，当只有一个cpu核心时，是无法实现并行 的，而并发是逻辑上的同时运行，侧重的是一个时间段，在一个核心上多个任务交替执行，但是他们可以交替获得时间片，造成并行的错觉。</li>
-</ul>
-
-      
-    </div>
-    
-  </div>
-  
-    
-    <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></p>
-        <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
-        <p><span>发布时间:</span>2018-08-18, 06:25:26</p>
-        <p><span>最后更新:</span>2018-08-20, 00:39:32</p>
-        <p>
-            <span>原始链接:</span><a class="post-url" href="/2018/08/18/Java并发（一）并发基本概念/" title="Java并发（一）并发基本概念">https://blog.goldminer.top/2018/08/18/Java并发（一）并发基本概念/</a>
-            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/08/18/Java并发（一）并发基本概念/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
-            <script> var clipboard = new Clipboard('.copy-path'); </script>
-        </p>
-        <p>
-            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target="_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
-        </p>
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/微服务/">微服务</a>
     </div>
 
 
-
-    <nav id="article-nav">
-        
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">
-                    Servlet3.0——模块化与动态Servlet
-                </a>
-            </div>
-        
-        
-    </nav>
-
-  
-</article>
-
-    <div id="toc" class="toc-article">
-        <strong class="toc-title">文章目录</strong>
-        
-            
-        
+          
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式/">分布式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li></ul>
     </div>
-    <style>
-        .left-col .switch-btn,
-        .left-col .switch-area {
-            display: none;
-        }
-        .toc-level-6 i,
-        .toc-level-6 ol {
-            display: none !important;
-        }
-    </style>
 
-    <input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
-
-    <script>
-        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
-    </script>
-
-
-
-    
-<div class="share">
-    
-        <div class="bdsharebuttonbox">
-            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
-            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
-            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
-            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
-            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
-            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
-            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></a>
         </div>
-        <script>
-            window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"Java并发（一）并发基本概念　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
-        </script>
-    
-
-    
-</div>
-
-
-
-
-
-
-
-    
-        <section id="comments">
-    <style> aside.comment-bar { margin: auto 30px; }</style>
-    <div id="disqus_thread"></div>
-    <script>
-        var disqus_config = function(){
-            this.page.url = 'https://blog.goldminer.top/2018/08/18/Java并发（一）并发基本概念/';
-            this.page.identifier = '2018/08/18/Java并发（一）并发基本概念/';
-        };
-        var loadComment = function(){
-            var d = document, s = d.createElement('script');
-            s.src = '//.disqus.com/embed.js';
-            s.setAttribute('data-timestamp', +new Date());
-            (d.head || d.body).appendChild(s);
-        }
-    </script>
-    
-    <script> loadComment(); </script>
-
-</section>
-
+        <div class="clearfix"></div>
+    </header>
+  </div>
+</article>
+  
+  
+    </div></section>
+  
 
     
 
-
-
-
-    <div class="scroll" id="post-nav-button">
-        
-            <a href="/2018/08/19/Servlet3-0——模块化与动态Servlet/" title="上一篇: Servlet3.0——模块化与动态Servlet">
-                <i class="fa fa-angle-left"></i>
-            </a>
-        
-
-        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
-
-        
-            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
-        
-    </div>
-
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/12/09/分布式架构（二）从服务化到微服务/">分布式架构（二）从服务化到微服务概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/28/分布式架构（一）分布式演化/">分布式架构（一）架构演化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel高可用/">Redis--Sentinel客户端高可用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-JedisCluster/">Redis--JedisCluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Cluster/">Redis--Cluster</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-Sentinel/">Redis--Sentinel</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-主从复制/">Redis--主从复制</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis-常见问题/">ReRedis--常见问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——持久化/">Redis——持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ReRedis——发布订阅-消息队列/">Redis——发布订阅/消息队列</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis——pipeline/">Redis——pipeline</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Redis-慢查询/">Redis 慢查询</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（五）Lock以及AbstractQueuedSynchronizer/">java并发（五）Lock以及AbstractQueuedSynchronizer实现原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/ssm框架使用slf4j-logback进行日志记录/">ssm框架使用slf4j+logback进行日志记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/spring-MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson/">spring MVC自定义配置注解处理器映射器和适配器中使用Gson替代Jsckson</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Gson复杂对象自定义序列化类/">解决Gson序列化实体类属性为null时返回null</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（四）偏向锁、轻量级锁、重量级锁/">java并发（四）偏向锁、轻量级锁、重量级锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java并发（三）synchronized、volatile以及底层实现/">Java并发（三）synchronized、volatile以及底层实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/java并发（二）线程安全性与Java内存模型/">java并发（二）线程安全性与Java内存模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（一）面向对象/">（一）面向对象</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（二）值传递与引用传递/">（二）值传递与引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/（三）重载与重写/">（三）重载与重写</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/初探String/">初探String</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java虚拟机内存管理/">Java虚拟机内存管理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/20/Java集合框架概述/">Java集合框架概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合操作类：Collections/">集合操作类：Collections</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——List接口及其实现类源码解析（JDK8）/">集合框架——List接口及其实现类源码解析（JDK8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/集合框架——Map接口及其实现类源码解析（JDK7-8）/">集合框架——Map接口及其实现类源码解析（JDK7/8）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/ThreadLocal实现与内存泄漏/">ThreadLocal实现与内存泄漏</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Spring-IOC-DI/">Spring IOC/DI</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/MySQl-InnoDB概述/">MySQl InnoDB概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Java——软引用、弱引用应用/">Java——软引用、弱引用应用</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet工作原理解析（一）Servlet容器/">Servlet工作原理解析（一）Servlet容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Tomcat生命周期管理与观察者模式/">Tomcat生命周期管理与观察者模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/19/Servlet3-0——模块化与动态Servlet/">Servlet3.0——模块化与动态Servlet</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/18/Java并发（一）并发基本概念/">Java并发（一）并发基本概念</a></li></ul>
-
-
-
-
-    <script>
-        
-    </script>
 </div>
       <footer id="footer">
     <div class="outer">
