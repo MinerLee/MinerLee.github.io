@@ -15,18 +15,18 @@
 
 
 
-<meta name="description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：  随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越">
+<meta name="description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：">
 <meta name="keywords" content="微服务,分布式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="分布式架构（二）从服务化到微服务概述">
 <meta property="og:url" content="https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/index.html">
 <meta property="og:site_name" content="MinerLee的博客">
-<meta property="og:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：  随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越">
+<meta property="og:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-12-09T07:11:18.852Z">
+<meta property="og:updated_time" content="2018-12-09T07:12:23.898Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式架构（二）从服务化到微服务概述">
-<meta name="twitter:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：  随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越">
+<meta name="twitter:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -321,6 +321,7 @@
           
         <h1 id="从服务化到微服务概述"><a href="#从服务化到微服务概述" class="headerlink" title="从服务化到微服务概述"></a>从服务化到微服务概述</h1><p>对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。</p>
 <p>对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：</p>
+<a id="more"></a>
 <ul>
 <li>随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越困难SSM时代的单体化应用从小小的Demo变成了单体地狱。项目想要引入新的技术将变得极为困难。</li>
 <li>从另一方面来说，持续部署变的极为困难，以公司的Sass业务为代表，极为频繁的更新无法及时部署到生产环境。</li>
@@ -351,7 +352,7 @@
         <p><span>本文标题:</span><a href="/2018/12/09/分布式架构（二）从服务化到微服务/">分布式架构（二）从服务化到微服务概述</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
         <p><span>发布时间:</span>2018-12-09, 13:00:29</p>
-        <p><span>最后更新:</span>2018-12-09, 15:11:18</p>
+        <p><span>最后更新:</span>2018-12-09, 15:12:23</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/12/09/分布式架构（二）从服务化到微服务/" title="分布式架构（二）从服务化到微服务概述">https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/</a>
             <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
