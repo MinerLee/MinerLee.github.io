@@ -23,13 +23,13 @@
 <meta property="og:site_name" content="MinerLee的博客">
 <meta property="og:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="c:/Users/DELL/AppData/Roaming/Typora/typora-user-images/1544863515070.png">
-<meta property="og:image" content="c:/Users/DELL/AppData/Roaming/Typora/typora-user-images/1544865063711.png">
-<meta property="og:updated_time" content="2018-12-15T09:58:05.389Z">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-99ac4e7f18b86049.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-d7dfe3ec69fad391.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-12-15T10:03:56.826Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="微服务架构下的缓存系统设计（一）">
 <meta name="twitter:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
-<meta name="twitter:image" content="c:/Users/DELL/AppData/Roaming/Typora/typora-user-images/1544863515070.png">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-99ac4e7f18b86049.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -336,7 +336,7 @@
 <li>要求准确率和实时性比较高<br>当然具体的数据划分还要根据业务的需求来做。</li>
 </ul>
 <p>下面我们来看一下我在项目中的缓存系统设计</p>
-<h4 id="缓存系统设计图"><a href="#缓存系统设计图" class="headerlink" title="缓存系统设计图"></a>缓存系统设计图</h4><p><img src="C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1544863515070.png" alt="1544863515070"></p>
+<h4 id="缓存系统设计图"><a href="#缓存系统设计图" class="headerlink" title="缓存系统设计图"></a>缓存系统设计图</h4><p><img src="https://upload-images.jianshu.io/upload_images/7432257-99ac4e7f18b86049.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="缓存系统设计图"></p>
 <p>我们以某个业务服务为例，可以看到我们的核心模块：</p>
 <ul>
 <li>数据操作入口</li>
@@ -353,7 +353,7 @@
 <h5 id="持久化的队列"><a href="#持久化的队列" class="headerlink" title="持久化的队列"></a>持久化的队列</h5><p>我相信大家对微服务中提倡的一个概念一定很熟悉，那就是解耦合，各个服务之间是独立的。</p>
 <p>我们来思考一下，去掉队列之后，数据可以直接在更新到mysql之后进行缓存，好像并没有什么影响，但是扩展性好像差了一些。</p>
 <p>这里使用队列不仅仅是单独为缓存服务提供的，我以项目中的订单系统为例，给大家看一下，MQ在业务中的作用，</p>
-<p><img src="C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1544865063711.png" alt="1544865063711"></p>
+<p><img src="https://upload-images.jianshu.io/upload_images/7432257-d7dfe3ec69fad391.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="订单系统"></p>
 <p>大家可以看到在订单系统下单持久化之后，将订单信息发送到延时队列中，这里为什么要使用延时队列呢？因为用户下单之后有一个支付的时间，所以要有一定的期限供用户支付。MQ在这里另外一方面的作用就是异步操作，大家可以想一下，在高并发下，同步能否抗的住？</p>
 <p>好了，我们回到缓存系统，为什么要采用持久化的队列？开头我们说过，这些数据是要求准确性的，所以在这一系列流程中，很有可能因为网络波动，或者业务服务自身问题造成数据的丢失，为了解决这些问题，我们还需要使用MQ的ack机制（<strong>缺点是重复数据与性能低（大家可以想一下tcp的ack机制）</strong>），当然如何抉择还是根据具体的业务来做。</p>
 <h5 id="缓存处理程序"><a href="#缓存处理程序" class="headerlink" title="缓存处理程序"></a>缓存处理程序</h5><p>缓存处理程序无非是把我们的业务数据转换成Redis支持的数据类型，项目中，为了方便（<strong>懒</strong>），我大部分使用的json的序列化机制，Redis客户端我选择的基于Jedis的RedisTemplate，当然也可以选择使用luttuce，luttuce提供了更多优秀的特性，大家可以自己了解。这里有一点希望大家注意的是，<strong>对于数值型的字符串，使用json进行序列化时是无法使用Redis的incr操作的，只能选择在业务中进行操作，因为可以选择使用StringRedisSerializer来对数值型的数据进行序列化。</strong></p>
@@ -371,7 +371,7 @@
         <p><span>本文标题:</span><a href="/2018/12/15/微服务架构下的缓存系统设计（一）/">微服务架构下的缓存系统设计（一）</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
         <p><span>发布时间:</span>2018-12-15, 13:25:45</p>
-        <p><span>最后更新:</span>2018-12-15, 17:58:05</p>
+        <p><span>最后更新:</span>2018-12-15, 18:03:56</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/12/15/微服务架构下的缓存系统设计（一）/" title="微服务架构下的缓存系统设计（一）">https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/</a>
             <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
