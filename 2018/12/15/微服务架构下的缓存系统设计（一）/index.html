@@ -15,18 +15,21 @@
 
 
 
-<meta name="description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：">
-<meta name="keywords" content="微服务,分布式">
+<meta name="description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
+<meta name="keywords" content="Redis,微服务,分布式,缓存">
 <meta property="og:type" content="article">
-<meta property="og:title" content="分布式架构（二）从服务化到微服务概述">
-<meta property="og:url" content="https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/index.html">
+<meta property="og:title" content="微服务架构下的缓存系统设计（一）">
+<meta property="og:url" content="https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/index.html">
 <meta property="og:site_name" content="MinerLee的博客">
-<meta property="og:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：">
+<meta property="og:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-12-09T07:12:23.898Z">
+<meta property="og:image" content="c:/Users/DELL/AppData/Roaming/Typora/typora-user-images/1544863515070.png">
+<meta property="og:image" content="c:/Users/DELL/AppData/Roaming/Typora/typora-user-images/1544865063711.png">
+<meta property="og:updated_time" content="2018-12-15T09:58:05.389Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="分布式架构（二）从服务化到微服务概述">
-<meta name="twitter:description" content="从服务化到微服务概述对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。 对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：">
+<meta name="twitter:title" content="微服务架构下的缓存系统设计（一）">
+<meta name="twitter:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
+<meta name="twitter:image" content="c:/Users/DELL/AppData/Roaming/Typora/typora-user-images/1544863515070.png">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -58,7 +61,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>分布式架构（二）从服务化到微服务概述 | MinerLee的博客</title>
+<title>微服务架构下的缓存系统设计（一） | MinerLee的博客</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -275,11 +278,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
 </nav>
-      <div class="body-wrap"><article id="post-分布式架构（二）从服务化到微服务" class="article article-type-post" itemscope="" itemprop="blogPost">
+      <div class="body-wrap"><article id="post-微服务架构下的缓存系统设计（一）" class="article article-type-post" itemscope="" itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018/12/09/分布式架构（二）从服务化到微服务/" class="article-date">
-      <time datetime="2018-12-09T05:00:29.000Z" itemprop="datePublished">2018-12-09</time>
+      <a href="/2018/12/15/微服务架构下的缓存系统设计（一）/" class="article-date">
+      <time datetime="2018-12-15T05:25:45.000Z" itemprop="datePublished">2018-12-15</time>
 </a>
 
 
@@ -294,7 +297,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      分布式架构（二）从服务化到微服务概述
+      微服务架构下的缓存系统设计（一）
     </h1>
   
 
@@ -309,7 +312,7 @@
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式/">分布式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式/">分布式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/缓存/">缓存</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -319,28 +322,44 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h1 id="从服务化到微服务概述"><a href="#从服务化到微服务概述" class="headerlink" title="从服务化到微服务概述"></a>从服务化到微服务概述</h1><p>对于一个刚接触技术的菜鸟来说，各种各样的技术总是让人充满了新鲜感，从刚刚学习接触到的SSM到分布式到微服务，我总是充满了憧憬。</p>
-<p>对于我来说，SSM就是技术生涯中的初恋，回想起来她总是那样美好，但是不免缺少了新鲜感。对于代码中到处都是bug的我来说，抛去热部署，每次修改都要重启Tomcat简直是无法忍受，但是无可避免：</p>
-<a id="more"></a>
-<ul>
-<li>随着项目的不断扩展，正确的修复BUG和开发新功能变的越来越困难SSM时代的单体化应用从小小的Demo变成了单体地狱。项目想要引入新的技术将变得极为困难。</li>
-<li>从另一方面来说，持续部署变的极为困难，以公司的Sass业务为代表，极为频繁的更新无法及时部署到生产环境。</li>
-<li>各种不同的业务需求的机器性能总是不同的，单一机器难以合理的满足单体应用，也难以满足高可用的需求，一个吃饱全家不饿变成了一个挂掉，全家GG。</li>
+        <p>说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。</p>
+<h4 id="首先问大家一个问题，为什么要使用缓存系统？"><a href="#首先问大家一个问题，为什么要使用缓存系统？" class="headerlink" title="首先问大家一个问题，为什么要使用缓存系统？"></a>首先问大家一个问题，为什么要使用缓存系统？</h4><p>这个问题留给大家去思考。</p>
+<h4 id="首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处："><a href="#首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：" class="headerlink" title="首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处："></a>首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：</h4><ul>
+<li>用户基本信息</li>
+<li>Mybatis的二级缓存</li>
+<li>一些其他的静态信息</li>
+<li>当然也使用了Redis做了短信服务的频次控制</li>
 </ul>
-<p>为了满足互联网时代的发展，SOA出现了，关于SOA与微服务其实存在着很多的讨论，这里我们要说一下SOA准确的来说具有两重含义，</p>
-<ol>
-<li><p>SOA即面向服务架构，服务间松散耦合，支持服务的封装，服务注册和自动发现，以服务契约方式定义服务交互方式。</p>
-</li>
-<li><p>说的是Enterprise Service Bus(ESB)、WebSphere Process Server（WPS）、WebSphere Integration Developer（WID）、WebSphere Message Broker（WMB）这些具体的产品。我们日常所说的SOA多是指以ESB为代表的具体实现。 </p>
-</li>
-</ol>
-<p>SOA其实就是为了解耦，解耦的本质就是为了去中心化，但是SOA有个很大的问题是，按照SOA的思路这些系统总会在某个环节上走向集中，所以去中心化做得很不彻底。</p>
+<p>我们可以发现这些数据有一些特点：</p>
 <ul>
-<li>中心化也就是我们所说的ESB以及web service，SB的根本诉求是为了解决异构系统之间的连通性，通过协议转换、消息解析、消息路由把服务提供者的数据传送到服务消费者。所以，ESB是中心化的，很重，有一定的逻辑，但它的确可以解决一些公用逻辑的问题。</li>
-<li>去中心化的根本诉求就是扩展性，通过一系列的微小服务来实现整体的业务流程，有效的拆分应用，更在于对扩展性、容错性、DevOps的支持，实现敏捷开发和部署，也就是我们说的微服务。</li>
+<li>更改频率比较低</li>
+<li>要求准确率和实时性比较高<br>当然具体的数据划分还要根据业务的需求来做。</li>
 </ul>
-<p>好了，这么看起来有点太烧脑了，我们通俗一点，很多人认为SOA与微服务是两个东西，但是我始终认为微服务架构是SOA架构的另一种实现方式，准确的来说是彻底去中心化的SOA，它们的分歧在于对服务的治理，是分布还是集中。当然这只是从大的方向上来说，具体的微服务实现细节是很多的，微服务架构首先要关注的不是RPC/ServiceDiscovery/Circuit Breaker这些概念，也不是Eureka/Docker/SpringCloud/Zipkin这些技术框架，而是服务的边界、职责划分，划分错误就会陷入大量的服务间的相互调用和分布式事务中。</p>
-<p>所以说，有时候没必要过于抠字眼，本来都是SOA思想的不同体现方式，微服务对我们的思考我觉得更多的是思维上的，对于微服务架构， 技术上不是问题，意识比工具重要。</p>
+<p>下面我们来看一下我在项目中的缓存系统设计</p>
+<h4 id="缓存系统设计图"><a href="#缓存系统设计图" class="headerlink" title="缓存系统设计图"></a>缓存系统设计图</h4><p><img src="C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1544863515070.png" alt="1544863515070"></p>
+<p>我们以某个业务服务为例，可以看到我们的核心模块：</p>
+<ul>
+<li>数据操作入口</li>
+<li>持久化的队列</li>
+<li>数据校验服务</li>
+<li>缓存处理程序</li>
+<li>数据一致性检查服务</li>
+<li>Redis HA</li>
+<li>MySQL HA</li>
+</ul>
+<p>我们来分别说一下他们的作用，</p>
+<h5 id="数据操作入口"><a href="#数据操作入口" class="headerlink" title="数据操作入口"></a>数据操作入口</h5><p>我们都知道，我们的服务往往跨越了多个终端，移动、web、以及C端，某个业务如果分别对这些终端提供数据操作入口，那么很容易引起数据的一致性问题，另一方面，数据操作的管理及其复杂，重复代码变多，那么这时候提供一个统一的操作入口，对外发布统一的接口就变得尤为重要。</p>
+<h5 id="数据校验服务"><a href="#数据校验服务" class="headerlink" title="数据校验服务"></a>数据校验服务</h5><p>当然这个服务各有见解，根据不同的业务需求对数据做一些业务上的校验或者数据库约束性的校验，对一些简单的校验可以在Web层提供统一的校验，复杂的业务校验我认为还是要在service层进行。</p>
+<h5 id="持久化的队列"><a href="#持久化的队列" class="headerlink" title="持久化的队列"></a>持久化的队列</h5><p>我相信大家对微服务中提倡的一个概念一定很熟悉，那就是解耦合，各个服务之间是独立的。</p>
+<p>我们来思考一下，去掉队列之后，数据可以直接在更新到mysql之后进行缓存，好像并没有什么影响，但是扩展性好像差了一些。</p>
+<p>这里使用队列不仅仅是单独为缓存服务提供的，我以项目中的订单系统为例，给大家看一下，MQ在业务中的作用，</p>
+<p><img src="C:\Users\DELL\AppData\Roaming\Typora\typora-user-images\1544865063711.png" alt="1544865063711"></p>
+<p>大家可以看到在订单系统下单持久化之后，将订单信息发送到延时队列中，这里为什么要使用延时队列呢？因为用户下单之后有一个支付的时间，所以要有一定的期限供用户支付。MQ在这里另外一方面的作用就是异步操作，大家可以想一下，在高并发下，同步能否抗的住？</p>
+<p>好了，我们回到缓存系统，为什么要采用持久化的队列？开头我们说过，这些数据是要求准确性的，所以在这一系列流程中，很有可能因为网络波动，或者业务服务自身问题造成数据的丢失，为了解决这些问题，我们还需要使用MQ的ack机制（<strong>缺点是重复数据与性能低（大家可以想一下tcp的ack机制）</strong>），当然如何抉择还是根据具体的业务来做。</p>
+<h5 id="缓存处理程序"><a href="#缓存处理程序" class="headerlink" title="缓存处理程序"></a>缓存处理程序</h5><p>缓存处理程序无非是把我们的业务数据转换成Redis支持的数据类型，项目中，为了方便（<strong>懒</strong>），我大部分使用的json的序列化机制，Redis客户端我选择的基于Jedis的RedisTemplate，当然也可以选择使用luttuce，luttuce提供了更多优秀的特性，大家可以自己了解。这里有一点希望大家注意的是，<strong>对于数值型的字符串，使用json进行序列化时是无法使用Redis的incr操作的，只能选择在业务中进行操作，因为可以选择使用StringRedisSerializer来对数值型的数据进行序列化。</strong></p>
+<h5 id="数据一致性检查"><a href="#数据一致性检查" class="headerlink" title="数据一致性检查"></a>数据一致性检查</h5><p>为什么需要数据一致性检查？因为我们的DB持久化操作与缓存操作是异步的，难免在DB持久化之后，缓存的过程中出现异常，或者HA集群在主从同步的时候发生异常，这时候一致性检查就显得尤为重要，但是一致性检查同时也带来了新的问题，那就是对DB的压力，所以没有什么方案是最好的，只能在HA与一致性作出抉择。</p>
+<p>在一致性检查之外，我们还可以选择另外一种方案，那就是过期策略，过期策略不需要一致性检查，但是他的问题在于过期时间的选择，大量数据过期引发的缓存穿透和雪崩又需要我们在服务中提供新的解决方案，例如：<strong>缓存的持久化方案：例如RDB、AOF，服务上线前的缓存预热</strong>、<strong>服务降级、熔断的策略、采用二级缓存</strong>、<strong>或者专门针对缓存服务的降级：页面降级、读写降级等</strong>。</p>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>总的来说，缓存服务是业务中必不可少的一环，我们应该考虑提供统一的缓存服务，并针对不同的业务进行优化和定制。这一篇主要是对缓存整体架构的说明，后面的文章将详细的介绍缓存的实际使用以及Redis的相关知识。</p>
 
       
     </div>
@@ -349,13 +368,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018/12/09/分布式架构（二）从服务化到微服务/">分布式架构（二）从服务化到微服务概述</a></p>
+        <p><span>本文标题:</span><a href="/2018/12/15/微服务架构下的缓存系统设计（一）/">微服务架构下的缓存系统设计（一）</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
-        <p><span>发布时间:</span>2018-12-09, 13:00:29</p>
-        <p><span>最后更新:</span>2018-12-09, 15:12:23</p>
+        <p><span>发布时间:</span>2018-12-15, 13:25:45</p>
+        <p><span>最后更新:</span>2018-12-15, 17:58:05</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018/12/09/分布式架构（二）从服务化到微服务/" title="分布式架构（二）从服务化到微服务概述">https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/</a>
-            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2018/12/15/微服务架构下的缓存系统设计（一）/" title="微服务架构下的缓存系统设计（一）">https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -367,16 +386,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018/12/15/微服务架构下的缓存系统设计（一）/">
-                    微服务架构下的缓存系统设计（一）
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018/09/28/分布式架构（一）分布式演化/">
-                    分布式架构（一）架构演化
+                <a href="/2018/12/09/分布式架构（二）从服务化到微服务/">
+                    分布式架构（二）从服务化到微服务概述
                 </a>
             </div>
         
@@ -388,7 +401,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#从服务化到微服务概述"><span class="toc-number">1.</span> <span class="toc-text">从服务化到微服务概述</span></a></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#首先问大家一个问题，为什么要使用缓存系统？"><span class="toc-number">1.</span> <span class="toc-text">首先问大家一个问题，为什么要使用缓存系统？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处："><span class="toc-number">2.</span> <span class="toc-text">首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#缓存系统设计图"><span class="toc-number">3.</span> <span class="toc-text">缓存系统设计图</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#数据操作入口"><span class="toc-number">3.1.</span> <span class="toc-text">数据操作入口</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#数据校验服务"><span class="toc-number">3.2.</span> <span class="toc-text">数据校验服务</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#持久化的队列"><span class="toc-number">3.3.</span> <span class="toc-text">持久化的队列</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#缓存处理程序"><span class="toc-number">3.4.</span> <span class="toc-text">缓存处理程序</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#数据一致性检查"><span class="toc-number">3.5.</span> <span class="toc-text">数据一致性检查</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结"><span class="toc-number">3.6.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
         
     </div>
     <style>
@@ -424,7 +437,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"分布式架构（二）从服务化到微服务概述　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"微服务架构下的缓存系统设计（一）　| MinerLee的博客　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -443,8 +456,8 @@
     <div id="disqus_thread"></div>
     <script>
         var disqus_config = function(){
-            this.page.url = 'https://blog.goldminer.top/2018/12/09/分布式架构（二）从服务化到微服务/';
-            this.page.identifier = '2018/12/09/分布式架构（二）从服务化到微服务/';
+            this.page.url = 'https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/';
+            this.page.identifier = '2018/12/15/微服务架构下的缓存系统设计（一）/';
         };
         var loadComment = function(){
             var d = document, s = d.createElement('script');
@@ -466,15 +479,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018/12/15/微服务架构下的缓存系统设计（一）/" title="上一篇: 微服务架构下的缓存系统设计（一）">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018/09/28/分布式架构（一）分布式演化/" title="下一篇: 分布式架构（一）架构演化">
+            <a href="/2018/12/09/分布式架构（二）从服务化到微服务/" title="下一篇: 分布式架构（二）从服务化到微服务概述">
                 <i class="fa fa-angle-right"></i>
             </a>
         
