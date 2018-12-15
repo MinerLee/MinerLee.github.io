@@ -15,20 +15,20 @@
 
 
 
-<meta name="description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
+<meta name="description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。">
 <meta name="keywords" content="Redis,微服务,分布式,缓存">
 <meta property="og:type" content="article">
 <meta property="og:title" content="微服务架构下的缓存系统设计（一）">
 <meta property="og:url" content="https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/index.html">
 <meta property="og:site_name" content="MinerLee的博客">
-<meta property="og:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
+<meta property="og:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-99ac4e7f18b86049.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/7432257-d7dfe3ec69fad391.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:updated_time" content="2018-12-15T10:03:56.826Z">
+<meta property="og:updated_time" content="2018-12-15T10:06:06.347Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="微服务架构下的缓存系统设计（一）">
-<meta name="twitter:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。 首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：">
+<meta name="twitter:description" content="说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。 首先问大家一个问题，为什么要使用缓存系统？这个问题留给大家去思考。">
 <meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/7432257-99ac4e7f18b86049.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -324,6 +324,7 @@
           
         <p>说到互联网时代，可能对于技术人员来说，就是大数据、高并发、分布式等各种代名词。尤其是当下十分火热的微服务，当然微服务的生态过于庞大，我们暂且不讨论，今天来说一下在微服务中如何设计一个缓存系统，这是我在项目中的总结，不对之处还请大家指正。</p>
 <h4 id="首先问大家一个问题，为什么要使用缓存系统？"><a href="#首先问大家一个问题，为什么要使用缓存系统？" class="headerlink" title="首先问大家一个问题，为什么要使用缓存系统？"></a>首先问大家一个问题，为什么要使用缓存系统？</h4><p>这个问题留给大家去思考。</p>
+<a id="more"></a>
 <h4 id="首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处："><a href="#首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：" class="headerlink" title="首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处："></a>首先我们要说一下这个缓存系统针对的目标是什么，在我的个人项目中，使用到缓存的地方大概有三处：</h4><ul>
 <li>用户基本信息</li>
 <li>Mybatis的二级缓存</li>
@@ -371,7 +372,7 @@
         <p><span>本文标题:</span><a href="/2018/12/15/微服务架构下的缓存系统设计（一）/">微服务架构下的缓存系统设计（一）</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">MinerLee</a></p>
         <p><span>发布时间:</span>2018-12-15, 13:25:45</p>
-        <p><span>最后更新:</span>2018-12-15, 18:03:56</p>
+        <p><span>最后更新:</span>2018-12-15, 18:06:06</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/12/15/微服务架构下的缓存系统设计（一）/" title="微服务架构下的缓存系统设计（一）">https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/</a>
             <span class="copy-path" data-clipboard-text="原文: https://blog.goldminer.top/2018/12/15/微服务架构下的缓存系统设计（一）/　　作者: MinerLee" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
